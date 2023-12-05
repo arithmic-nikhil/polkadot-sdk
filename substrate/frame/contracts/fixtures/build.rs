@@ -65,6 +65,25 @@ impl Entry {
 			.expect("name is valid unicode; qed")
 	}
 
+	/// Return whether the contract has already been compiled.
+	fn is_cached(&self, out_dir: &Path) -> bool {
+		out_dir.join(self.name()).join(&self.hash).exists()
+	}
+
+	fn update_cache(&self, out_dir: &Path) -> Result<()> {
+		let cache_dir = out_dir.join(self.name());
+
+		// clear the cache dir if it exists
+		if cache_dir.exists() {
+			fs::remove_dir_all(&cache_dir)?;
+		}
+
+		// re-populate the cache dir with the new hash
+		fs::create_dir_all(&cache_dir)?;
+		fs::write(out_dir.join(&self.hash), "")?;
+		Ok(())
+	}
+
 	/// Return the name of the output wasm file.
 	fn out_wasm_filename(&self) -> String {
 		format!("{}.wasm", self.name())
@@ -87,7 +106,7 @@ fn collect_entries(contracts_dir: &Path, out_dir: &Path) -> Vec<Entry> {
 			}
 
 			let entry = Entry::new(path);
-			if out_dir.join(&entry.hash).exists() {
+			if entry.is_cached(out_dir) {
 				None
 			} else {
 				Some(entry)
@@ -260,7 +279,7 @@ fn write_output(build_dir: &Path, out_dir: &Path, entries: Vec<Entry>) -> Result
 			&out_dir.join(&entry.out_riscv_filename()),
 		)?;
 
-		fs::write(out_dir.join(&entry.hash), "")?;
+		entry.update_cache(out_dir)?;
 	}
 
 	Ok(())
@@ -310,5 +329,6 @@ fn main() -> Result<()> {
 	invoke_riscv_build(tmp_dir_path)?;
 	write_output(tmp_dir_path, &out_dir, entries)?;
 
+	println!("cargo:rerun-if-changed=./contracts");
 	Ok(())
 }

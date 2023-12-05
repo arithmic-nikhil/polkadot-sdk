@@ -17,6 +17,8 @@
 #![no_std]
 #![cfg(any(target_arch = "wasm32", target_arch = "riscv32"))]
 
+pub use uapi::{HostFn, HostFnImpl as api};
+
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
 	#[cfg(target_arch = "wasm32")]
@@ -28,4 +30,89 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
 		core::arch::asm!("unimp");
 		core::hint::unreachable_unchecked();
 	}
+}
+
+/// Utility macro to read input passed to a contract.
+///
+/// Example:
+///
+/// ```
+/// // data layout is:
+/// // [0, 4)    var1 decoded as u32
+/// // [4, 36)   var2 decoded as a [u8] slice
+/// // [36, 37): var3 decoded as a u8
+/// input$!(var1: u32, var2: [u8; 32], var3: u8, )
+/// ```
+#[macro_export]
+macro_rules! input {
+    (@inner $input:expr, $cursor:expr,) => {};
+    (@size $size:expr, ) => { $size };
+
+    // Match a u8 variable.
+    (@inner $input:expr, $cursor:expr, $var:ident: u8, $($rest:tt)*) => {
+        let $var = $input[$cursor];
+        input!(@inner $input, $cursor + 1, $($rest)*);
+    };
+
+    // Size of u8 variable.
+    (@size $size:expr, $var:ident: u8, $($rest:tt)*) => {
+        input!(@size $size + 1, $($rest)*)
+    };
+
+    // Match a u64 variable.
+    (@inner $input:expr, $cursor:expr, $var:ident: u64, $($rest:tt)*) => {
+        let $var = u64::from_le_bytes($input[$cursor..$cursor + 8].try_into().unwrap());
+        input!(@inner $input, $cursor + 8, $($rest)*);
+    };
+
+    // Size of u64 variable.
+    (@size $size:expr, $var:ident: u64, $($rest:tt)*) => {
+        input!(@size $size + 8, $($rest)*)
+    };
+
+    // Match a u32 variable.
+    (@inner $input:expr, $cursor:expr, $var:ident: u32, $($rest:tt)*) => {
+        let $var = u32::from_le_bytes($input[$cursor..$cursor + 4].try_into().unwrap());
+        input!(@inner $input, $cursor + 4, $($rest)*); // Continue with the rest
+    };
+
+    // Size of u32 variable.
+    (@size $size:expr, $var:ident: u32, $($rest:tt)*) => {
+        input!(@size $size + 4, $($rest)*)
+    };
+
+    // Match a u8 slice with the remaining bytes.
+    (@inner $input:expr, $cursor:expr, $var:ident: [u8],) => {
+        let $var = &$input[$cursor..];
+    };
+
+    // Match a u8 slice of the given size.
+    (@inner $input:expr, $cursor:expr, $var:ident: [u8; $n:expr], $($rest:tt)*) => {
+        let $var = &$input[$cursor..$cursor+$n];
+        input!(@inner $input, $cursor + $n, $($rest)*); // Continue with the rest
+    };
+
+    // Size of a u8 slice.
+    (@size $size:expr, $var:ident: [u8; $n:expr], $($rest:tt)*) => {
+        input!(@size $size + $n, $($rest)*)
+    };
+
+    // Entry point, with the size of the input buffer specified first.
+    ($buffer:ident, $size:expr, $($rest:tt)*) => {
+        let mut $buffer = [0u8; $size];
+        let $buffer = &mut &mut $buffer[..];
+        $crate::api::input($buffer);
+        input!(@inner $buffer, 0, $($rest)*);
+    };
+
+    // Entry point, with the name of the buffer specified and size of the input buffer computed.
+    ($buffer: ident, $($rest:tt)*) => {
+        const BUFFER_SIZE: usize = input!(@size 0, $($rest)*);
+        input!($buffer, input!(@size 0, $($rest)*), $($rest)*);
+    };
+
+    // Entry point, with the size of the input buffer computed.
+    ($($rest:tt)*) => {
+        input!(buffer, $($rest)*);
+    };
 }

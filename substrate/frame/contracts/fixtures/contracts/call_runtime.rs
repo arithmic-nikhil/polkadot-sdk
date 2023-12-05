@@ -19,7 +19,7 @@
 #![no_std]
 #![no_main]
 
-extern crate common;
+use common::input;
 use uapi::{HostFn, HostFnImpl as api};
 
 #[no_mangle]
@@ -30,11 +30,7 @@ pub extern "C" fn deploy() {}
 #[polkavm_derive::polkavm_export]
 pub extern "C" fn call() {
 	// Fixture calls should fit into 100 bytes.
-	let mut buffer = [0u8; 100];
-
-	// Read the call data.
-	let call = &mut &mut buffer[..];
-	api::input(call);
+	input!(100, call: [u8], );
 
 	// Use the call passed as input to call the runtime.
 	let err_code = match api::call_runtime(&call) {

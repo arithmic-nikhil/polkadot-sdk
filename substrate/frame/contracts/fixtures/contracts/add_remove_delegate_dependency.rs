@@ -20,7 +20,7 @@
 #![no_std]
 #![no_main]
 
-extern crate common;
+use common::input;
 use uapi::{HostFn, HostFnImpl as api};
 
 #[repr(u32)]
@@ -37,17 +37,8 @@ const ALICE: [u8; 32] = [1u8; 32];
 /// Load input data and perform the action specified by the input.
 /// Return the code hash of the contract to delegate call to.
 fn load_input() -> [u8; 32] {
-	let mut buffer = [0u8; 36];
-	let input = &mut &mut buffer[..];
-	api::input(input);
-	assert_eq!(input.len(), 36);
-
-	// Action is stored in the first 4 bytes.
-	let action = u32::from_le_bytes(input[0..4].try_into().unwrap());
+	input!(action: u32, code_hash: [u8; 32],);
 	let action = unsafe { core::mem::transmute::<u32, Action>(action) };
-
-	// Code hash is stored in the next 32 bytes.
-	let code_hash = &input[4..36];
 
 	match action {
 		Action::Noop => {},

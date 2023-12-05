@@ -19,7 +19,7 @@
 #![no_std]
 #![no_main]
 
-extern crate common;
+use common::input;
 use uapi::{HostFn, HostFnImpl as api};
 
 #[no_mangle]
@@ -29,13 +29,8 @@ pub extern "C" fn deploy() {}
 #[no_mangle]
 #[polkavm_derive::polkavm_export]
 pub extern "C" fn call() {
-	let mut buffer = [0u8; 40];
-
-	// Read the input data.
-	api::input(&mut &mut buffer[..]);
-	let callee_input = &buffer[0..4];
-	let callee_addr = &buffer[4..36];
-	let value = &buffer[36..40];
+	input!(callee_input: [u8; 4], callee_addr: [u8; 32],);
+	let value = 0u64.to_le_bytes();
 
 	// Call the callee
 	api::call_v1(

@@ -15,9 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! This calls the supplied dest and transfers 100 balance during this call and copies
-//! the return code of this call to the output buffer.
-//! It also forwards its input to the callee.
+//! Call chain extension by passing through input and output of this contract.
 #![no_std]
 #![no_main]
 
@@ -31,21 +29,14 @@ pub extern "C" fn deploy() {}
 #[no_mangle]
 #[polkavm_derive::polkavm_export]
 pub extern "C" fn call() {
-	input!(100, callee_addr: [u8; 32], input: [u8], );
-	let value = 100u64.to_le_bytes();
+	input!(input, 8, func_id: u32,);
 
-	// Call the callee
-	let err_code = match api::call_v1(
-		uapi::CallFlags::empty(),
-		callee_addr,
-		0u64, // How much gas to devote for the execution. 0 = all.
-		&value,
-		&input,
-		None,
-	) {
-		Ok(_) => 0u32,
-		Err(code) => code as u32,
-	};
+	// the chain extension passes through the input and returns it as output
+	let mut output_buffer = [0u8; 32];
+	let output = &mut &mut output_buffer[..];
 
-	api::return_value(uapi::ReturnFlags::empty(), &err_code.to_le_bytes());
+	let ret_id = api::call_chain_extension(func_id, &input, output);
+	assert_eq!(ret_id, func_id);
+
+	api::return_value(uapi::ReturnFlags::empty(), output);
 }

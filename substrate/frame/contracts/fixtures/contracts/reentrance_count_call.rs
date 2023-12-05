@@ -20,10 +20,8 @@
 #![no_std]
 #![no_main]
 
-extern crate common;
+use common::input;
 use uapi::{HostFn, HostFnImpl as api};
-
-const VALUE: [u8; 8] = [0u8; 8];
 
 #[no_mangle]
 #[polkavm_derive::polkavm_export]
@@ -32,14 +30,11 @@ pub extern "C" fn deploy() {}
 #[no_mangle]
 #[polkavm_derive::polkavm_export]
 pub extern "C" fn call() {
+	input!(expected_reentrance_count: u32,);
+
 	// Read the contract address.
 	let mut addr = [0u8; 32];
 	api::address(&mut &mut addr[..]);
-
-	// Read the expected reentrance count
-	let mut count = [0u8; 4];
-	api::input(&mut &mut count[..]);
-	let mut expected_reentrance_count = u32::from_le_bytes(count);
 
 	#[allow(deprecated)]
 	let reentrance_count = api::reentrance_count();
@@ -47,14 +42,14 @@ pub extern "C" fn call() {
 
 	// Re-enter 5 times in a row and assert that the reentrant counter works as expected.
 	if expected_reentrance_count != 5 {
-		expected_reentrance_count += 1;
-		count.copy_from_slice(&expected_reentrance_count.to_le_bytes());
+		let count = (expected_reentrance_count + 1).to_le_bytes();
+		let value = 0u64.to_le_bytes();
 
 		api::call_v1(
 			uapi::CallFlags::ALLOW_REENTRY,
 			&addr,
 			0u64, // How much gas to devote for the execution. 0 = all.
-			&VALUE,
+			&value,
 			&count,
 			None,
 		)

@@ -15,9 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! This calls the supplied dest and transfers 100 balance during this call and copies
-//! the return code of this call to the output buffer.
-//! It also forwards its input to the callee.
+//! This calls another contract as passed as its account id.
 #![no_std]
 #![no_main]
 
@@ -31,21 +29,20 @@ pub extern "C" fn deploy() {}
 #[no_mangle]
 #[polkavm_derive::polkavm_export]
 pub extern "C" fn call() {
-	input!(100, callee_addr: [u8; 32], input: [u8], );
-	let value = 100u64.to_le_bytes();
+	input!(512, callee_input: [u8; 4], callee_addr: [u8; 32], call: [u8],);
+
+	// Use the call passed as input to call the runtime.
+	api::call_runtime(&call).unwrap();
 
 	// Call the callee
-	let err_code = match api::call_v1(
+	let value = 0u64.to_le_bytes();
+	api::call_v1(
 		uapi::CallFlags::empty(),
-		callee_addr,
+		&callee_addr,
 		0u64, // How much gas to devote for the execution. 0 = all.
 		&value,
-		&input,
+		&callee_input,
 		None,
-	) {
-		Ok(_) => 0u32,
-		Err(code) => code as u32,
-	};
-
-	api::return_value(uapi::ReturnFlags::empty(), &err_code.to_le_bytes());
+	)
+	.unwrap();
 }

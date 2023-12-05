@@ -15,9 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! This calls the supplied dest and transfers 100 balance during this call and copies
-//! the return code of this call to the output buffer.
-//! It also forwards its input to the callee.
+//! This expects [account_id, ref_time, proof_size] as input and calls the account_id with the
+//! supplied 2D Weight limit. It returns the result of the call as output data.
 #![no_std]
 #![no_main]
 
@@ -31,21 +30,20 @@ pub extern "C" fn deploy() {}
 #[no_mangle]
 #[polkavm_derive::polkavm_export]
 pub extern "C" fn call() {
-	input!(100, callee_addr: [u8; 32], input: [u8], );
-	let value = 100u64.to_le_bytes();
+	input!(callee_addr: [u8; 32], ref_time: u64, proof_size: u64,);
+	let value = 0u64.to_le_bytes();
+	let callee_input = [0u8; 0];
 
-	// Call the callee
-	let err_code = match api::call_v1(
+	#[allow(deprecated)]
+	api::call_v2(
 		uapi::CallFlags::empty(),
 		callee_addr,
-		0u64, // How much gas to devote for the execution. 0 = all.
-		&value,
-		&input,
+		ref_time,
+		proof_size,
 		None,
-	) {
-		Ok(_) => 0u32,
-		Err(code) => code as u32,
-	};
-
-	api::return_value(uapi::ReturnFlags::empty(), &err_code.to_le_bytes());
+		&value,
+		&callee_input,
+		None,
+	)
+	.unwrap();
 }
