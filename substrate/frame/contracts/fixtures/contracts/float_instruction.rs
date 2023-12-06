@@ -14,12 +14,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
 #![no_std]
 #![no_main]
 
-use common::output;
-use uapi::{HostFn, HostFnImpl as api};
+extern crate common;
 
 #[no_mangle]
 #[polkavm_derive::polkavm_export]
@@ -27,10 +25,9 @@ pub extern "C" fn deploy() {}
 
 #[no_mangle]
 #[polkavm_derive::polkavm_export]
-pub extern "C" fn call() {
-	// Initialize buffer with 1s so that we can check that it is overwritten.
-	output!(balance, [1u8; 8], api::balance,);
+pub extern "C" fn call() {}
 
-	// Assert that the balance is 0.
-	assert_eq!(&[0u8; 8], balance);
+#[no_mangle]
+pub extern "C" fn add(a: f32, b: f32) -> f32 {
+	a + b
 }

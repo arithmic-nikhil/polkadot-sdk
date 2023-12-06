@@ -15,10 +15,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! This instantiates another contract and passes some input to its constructor.
 #![no_std]
 #![no_main]
 
-use common::output;
+use common::input;
 use uapi::{HostFn, HostFnImpl as api};
 
 #[no_mangle]
@@ -28,9 +29,31 @@ pub extern "C" fn deploy() {}
 #[no_mangle]
 #[polkavm_derive::polkavm_export]
 pub extern "C" fn call() {
-	// Initialize buffer with 1s so that we can check that it is overwritten.
-	output!(balance, [1u8; 8], api::balance,);
+	input!(
+		input: [u8; 4],
+		code_hash: [u8; 32],
+		deposit_limit: [u8; 8],
+	);
 
-	// Assert that the balance is 0.
-	assert_eq!(&[0u8; 8], balance);
+	let value = 10_000u64.to_le_bytes();
+	let salt = [0u8; 0];
+	let mut address = [0u8; 32];
+	let address = &mut address[..];
+
+	#[allow(deprecated)]
+	api::instantiate_v2(
+		&code_hash,
+		0u64, // How much ref_time weight to devote for the execution. 0 = all.
+		0u64, // How much proof_size weight to devote for the execution. 0 = all.
+		Some(deposit_limit),
+		&value,
+		&input,
+		Some(address),
+		None,
+		&salt,
+	)
+	.unwrap();
+
+	// Return the deployed contract address.
+	api::return_value(uapi::ReturnFlags::empty(), address);
 }

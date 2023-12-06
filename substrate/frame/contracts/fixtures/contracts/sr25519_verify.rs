@@ -15,10 +15,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! This calls another contract as passed as its account id.
 #![no_std]
 #![no_main]
 
-use common::output;
+use common::input;
 use uapi::{HostFn, HostFnImpl as api};
 
 #[no_mangle]
@@ -28,9 +29,17 @@ pub extern "C" fn deploy() {}
 #[no_mangle]
 #[polkavm_derive::polkavm_export]
 pub extern "C" fn call() {
-	// Initialize buffer with 1s so that we can check that it is overwritten.
-	output!(balance, [1u8; 8], api::balance,);
+	input!(signature: [u8; 64], pub_key: [u8; 32], msg: [u8; 11], );
 
-	// Assert that the balance is 0.
-	assert_eq!(&[0u8; 8], balance);
+	let exit_status = match api::sr25519_verify(
+		&signature.try_into().unwrap(),
+		&msg,
+		&pub_key.try_into().unwrap(),
+	) {
+		Ok(_) => 0u32,
+		Err(code) => code as u32,
+	};
+
+	// exit with success and take transfer return code to the output buffer
+	api::return_value(uapi::ReturnFlags::empty(), &exit_status.to_le_bytes());
 }

@@ -28,9 +28,17 @@ pub extern "C" fn deploy() {}
 #[no_mangle]
 #[polkavm_derive::polkavm_export]
 pub extern "C" fn call() {
-	// Initialize buffer with 1s so that we can check that it is overwritten.
-	output!(balance, [1u8; 8], api::balance,);
+	output!(balance, [0u8; 8], api::balance,);
+	let balance = u64::from_le_bytes(balance[..].try_into().unwrap());
 
-	// Assert that the balance is 0.
-	assert_eq!(&[0u8; 8], balance);
+	output!(minimum_balance, [0u8; 8], api::minimum_balance,);
+	let minimum_balance = u64::from_le_bytes(minimum_balance[..].try_into().unwrap());
+
+	// Make the transferred value exceed the balance by adding the minimum balance.
+	let balance = balance + minimum_balance;
+
+	// Try to self-destruct by sending more balance to the 0 address.
+	// The call will fail because a contract transfer has a keep alive requirement
+	let res = api::transfer(&[0u8; 32], &balance.to_le_bytes());
+	assert!(matches!(res, Err(uapi::ReturnErrorCode::TransferFailed)));
 }

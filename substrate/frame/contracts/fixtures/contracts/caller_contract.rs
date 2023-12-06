@@ -62,7 +62,7 @@ pub extern "C" fn call() {
 		None, // No deposit limit.
 		&value, &input, None, None, &salt,
 	);
-	// assert!(matches!(res, Err(ReturnErrorCode::CalleeTrapped)));
+	assert!(matches!(res, Err(ReturnErrorCode::CalleeTrapped)));
 
 	// Fail to deploy the contract due to insufficient proof_size weight.
 	#[allow(deprecated)]

@@ -42,6 +42,14 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
 /// // [4, 36)   var2 decoded as a [u8] slice
 /// // [36, 37): var3 decoded as a u8
 /// input$!(var1: u32, var2: [u8; 32], var3: u8, )
+
+/// // size can be specified as well:
+/// // [0, 4)    var4 decoded as u32
+/// // [4, ..)   var5 decoded as a [u8] slice
+/// input$!(512, var6: u32, var7: [u8])
+
+/// // input buffer can returned as well when specified as the first argument:
+/// input$!(input, var8: u32)
 /// ```
 #[macro_export]
 macro_rules! input {
@@ -114,5 +122,34 @@ macro_rules! input {
     // Entry point, with the size of the input buffer computed.
     ($($rest:tt)*) => {
         input!(buffer, $($rest)*);
+    };
+}
+
+/// Utility macro to invoke a host function that expect a `output: &mut &mut [u8]` as last argument
+///
+/// Example:
+/// ```
+/// // call `api::caller` and store the output in `caller`
+/// output!(caller, [0u8; 32], api::caller,);
+///
+/// // call `api::get_storage` and store the output in `address`
+/// output!(address, [0u8; 32], api::get_storage, &[1u8; 32]);
+
+/// // call a deprecated API
+/// output!(address, [0u8; 32], deprecated, api::get_storage, &[1u8; 32]);
+/// ```
+#[macro_export]
+macro_rules! output {
+    ($output: ident, $buffer: expr, deprecated, $host_fn:path, $($arg:expr),*) => {
+        let mut $output = $buffer;
+        let $output = &mut &mut $output[..];
+        #[allow(deprecated)]
+        $host_fn($($arg,)* $output);
+    };
+
+    ($output: ident, $buffer: expr, $host_fn:path, $($arg:expr),*) => {
+        let mut $output = $buffer;
+        let $output = &mut &mut $output[..];
+        $host_fn($($arg,)* $output);
     };
 }

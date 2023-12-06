@@ -18,7 +18,7 @@
 #![no_std]
 #![no_main]
 
-use common::output;
+use common::input;
 use uapi::{HostFn, HostFnImpl as api};
 
 #[no_mangle]
@@ -28,9 +28,18 @@ pub extern "C" fn deploy() {}
 #[no_mangle]
 #[polkavm_derive::polkavm_export]
 pub extern "C" fn call() {
-	// Initialize buffer with 1s so that we can check that it is overwritten.
-	output!(balance, [1u8; 8], api::balance,);
+	input!(len: u32, );
 
-	// Assert that the balance is 0.
-	assert_eq!(&[0u8; 8], balance);
+	let mut buffer = [0u8; 16 * 1024 + 1];
+	let data = &buffer[..len as usize];
+
+	// place a garbage value in storage, the size of which is specified by the call input.
+	let mut key = [0u8; 32];
+	key[0] = 1;
+
+	api::set_storage(&key, &data);
+
+	let data = &mut &mut buffer[..];
+	api::get_storage(&key, data).unwrap();
+	assert_eq!(data.len(), len as usize);
 }

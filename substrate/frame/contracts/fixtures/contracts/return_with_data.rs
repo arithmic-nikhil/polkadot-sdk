@@ -19,7 +19,7 @@
 #![no_std]
 #![no_main]
 
-extern crate common;
+use common::input;
 use uapi::{HostFn, HostFnImpl as api};
 
 #[no_mangle]
@@ -28,18 +28,13 @@ pub extern "C" fn deploy() {
 	call();
 }
 
-#[no_mangle]
-#[polkavm_derive::polkavm_export]
 /// Reads the first byte as the exit status and copy all but the first 4 bytes of the input as
 /// output data.
+#[no_mangle]
+#[polkavm_derive::polkavm_export]
 pub extern "C" fn call() {
-	let mut buffer = [0u8; 128];
-	let input = &mut &mut buffer[..];
-
-	// Read the input data.
-	api::input(input);
-	let exit_status = uapi::ReturnFlags::from_bits(input[0] as u32).unwrap();
-	let output = &input[4..];
+	input!(input, 128, exit_status: [u8; 4], output: [u8], );
+	let exit_status = uapi::ReturnFlags::from_bits(exit_status[0] as u32).unwrap();
 
 	api::return_value(exit_status, output);
 }

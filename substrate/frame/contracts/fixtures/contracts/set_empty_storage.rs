@@ -18,7 +18,7 @@
 #![no_std]
 #![no_main]
 
-use common::output;
+extern crate common;
 use uapi::{HostFn, HostFnImpl as api};
 
 #[no_mangle]
@@ -28,9 +28,5 @@ pub extern "C" fn deploy() {}
 #[no_mangle]
 #[polkavm_derive::polkavm_export]
 pub extern "C" fn call() {
-	// Initialize buffer with 1s so that we can check that it is overwritten.
-	output!(balance, [1u8; 8], api::balance,);
-
-	// Assert that the balance is 0.
-	assert_eq!(&[0u8; 8], balance);
+	api::set_storage(&[0u8; 32], &[0u8; 4]);
 }

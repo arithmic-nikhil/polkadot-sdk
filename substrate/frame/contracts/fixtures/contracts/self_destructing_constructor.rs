@@ -15,22 +15,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! This calls another contract as passed as its account id.
 #![no_std]
 #![no_main]
 
-use common::output;
+extern crate common;
 use uapi::{HostFn, HostFnImpl as api};
 
 #[no_mangle]
 #[polkavm_derive::polkavm_export]
-pub extern "C" fn deploy() {}
+pub extern "C" fn deploy() {
+	api::terminate_v1(&[0u8; 32]);
+}
 
 #[no_mangle]
 #[polkavm_derive::polkavm_export]
-pub extern "C" fn call() {
-	// Initialize buffer with 1s so that we can check that it is overwritten.
-	output!(balance, [1u8; 8], api::balance,);
-
-	// Assert that the balance is 0.
-	assert_eq!(&[0u8; 8], balance);
-}
+pub extern "C" fn call() {}

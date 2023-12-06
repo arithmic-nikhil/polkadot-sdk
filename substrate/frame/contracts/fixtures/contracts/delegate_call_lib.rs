@@ -15,6 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//! This calls another contract as passed as its account id.
 #![no_std]
 #![no_main]
 
@@ -28,9 +29,18 @@ pub extern "C" fn deploy() {}
 #[no_mangle]
 #[polkavm_derive::polkavm_export]
 pub extern "C" fn call() {
-	// Initialize buffer with 1s so that we can check that it is overwritten.
-	output!(balance, [1u8; 8], api::balance,);
+	let mut key = [0u8; 32];
+	key[0] = 1u8;
 
-	// Assert that the balance is 0.
-	assert_eq!(&[0u8; 8], balance);
+	let mut value = [0u8; 32];
+	let value = &mut &mut value[..];
+	value[0] = 1u8;
+	api::set_storage(&key, &value);
+
+	output!(value_transferred, [0u8; 8], api::value_transferred,);
+	let value_transferred = u64::from_le_bytes(value_transferred[..].try_into().unwrap());
+	assert_eq!(value_transferred, 1337);
+
+	output!(caller, [0u8; 32], api::caller,);
+	assert_eq!(&caller[..], &[1u8; 32]);
 }

@@ -18,19 +18,19 @@
 #![no_std]
 #![no_main]
 
-use common::output;
+extern crate common;
 use uapi::{HostFn, HostFnImpl as api};
 
 #[no_mangle]
 #[polkavm_derive::polkavm_export]
-pub extern "C" fn deploy() {}
+pub extern "C" fn deploy() {
+	let buffer = [1u8, 2, 3, 4];
+	api::deposit_event(&[0u8; 0], &buffer);
+	api::return_value(uapi::ReturnFlags::empty(), &buffer);
+}
 
 #[no_mangle]
 #[polkavm_derive::polkavm_export]
 pub extern "C" fn call() {
-	// Initialize buffer with 1s so that we can check that it is overwritten.
-	output!(balance, [1u8; 8], api::balance,);
-
-	// Assert that the balance is 0.
-	assert_eq!(&[0u8; 8], balance);
+	panic!("Should not be called");
 }

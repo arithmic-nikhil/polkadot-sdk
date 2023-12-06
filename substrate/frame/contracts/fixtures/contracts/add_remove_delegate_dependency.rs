@@ -36,7 +36,7 @@ const ALICE: [u8; 32] = [1u8; 32];
 
 /// Load input data and perform the action specified by the input.
 /// Return the code hash of the contract to delegate call to.
-fn load_input() -> [u8; 32] {
+fn load_input(delegate_call: bool) {
 	input!(action: u32, code_hash: [u8; 32],);
 	let action = unsafe { core::mem::transmute::<u32, Action>(action) };
 
@@ -55,20 +55,19 @@ fn load_input() -> [u8; 32] {
 		},
 	}
 
-	let mut buffer = [0u8; 32];
-	buffer.copy_from_slice(code_hash);
-	buffer
+	if delegate_call {
+		api::delegate_call(uapi::CallFlags::empty(), &code_hash, &[], None).unwrap();
+	}
 }
 
 #[no_mangle]
 #[polkavm_derive::polkavm_export]
 pub extern "C" fn deploy() {
-	load_input();
+	load_input(false);
 }
 
 #[no_mangle]
 #[polkavm_derive::polkavm_export]
 pub extern "C" fn call() {
-	let code_hash = load_input();
-	api::delegate_call(uapi::CallFlags::empty(), &code_hash, &[], None).unwrap();
+	load_input(true);
 }

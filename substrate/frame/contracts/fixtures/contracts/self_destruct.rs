@@ -18,8 +18,10 @@
 #![no_std]
 #![no_main]
 
-use common::output;
+use common::{input, output};
 use uapi::{HostFn, HostFnImpl as api};
+
+const DJANGO: [u8; 32] = [4u8; 32];
 
 #[no_mangle]
 #[polkavm_derive::polkavm_export]
@@ -28,9 +30,24 @@ pub extern "C" fn deploy() {}
 #[no_mangle]
 #[polkavm_derive::polkavm_export]
 pub extern "C" fn call() {
-	// Initialize buffer with 1s so that we can check that it is overwritten.
-	output!(balance, [1u8; 8], api::balance,);
+	// If the input data is not empty, then recursively call self with empty input data.
+	// This should trap instead of self-destructing since a contract cannot be removed, while it's
+	// in the execution stack. If the recursive call traps, then trap here as well.
+	input!(input, 4,);
 
-	// Assert that the balance is 0.
-	assert_eq!(&[0u8; 8], balance);
+	if !input.is_empty() {
+		output!(addr, [0u8; 32], api::address,);
+		api::call_v1(
+			uapi::CallFlags::ALLOW_REENTRY,
+			&addr,
+			0u64,                // How much gas to devote for the execution. 0 = all.
+			&0u64.to_le_bytes(), // Value to transfer.
+			&[0u8; 0],
+			None,
+		)
+		.unwrap();
+	} else {
+		// Try to terminate and give balance to django.
+		api::terminate_v1(&DJANGO);
+	}
 }

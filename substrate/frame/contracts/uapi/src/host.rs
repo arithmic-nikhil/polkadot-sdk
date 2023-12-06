@@ -201,12 +201,13 @@ pub trait HostFn {
 	///
 	/// - `func_id`: The function id of the chain extension.
 	/// - `input`: The input data buffer.
-	/// - `output`: A reference to the output data buffer to write the output data.
+	/// - `output`: A reference to the output data buffer to write the call output buffer. If `None`
+	///   is provided then the output buffer is not copied.
 	///
 	/// # Return
 	///
 	/// The chain extension returned value, if executed successfully.
-	fn call_chain_extension(func_id: u32, input: &[u8], output: &mut &mut [u8]) -> u32;
+	fn call_chain_extension(func_id: u32, input: &[u8], output: Option<&mut [u8]>) -> u32;
 
 	/// Call some dispatchable of the runtime.
 	///
