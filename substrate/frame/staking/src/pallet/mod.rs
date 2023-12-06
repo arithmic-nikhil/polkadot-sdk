@@ -855,6 +855,9 @@ pub mod pallet {
 		ControllerDeprecated,
 		/// Provided reward destination is not allowed.
 		RewardDestinationRestricted,
+		// FIXME(ank4n): look at the error again
+		/// Not enough funds available to withdraw
+		NotEnoughFunds,
 	}
 
 	#[pallet::hooks]
@@ -1055,7 +1058,6 @@ pub mod pallet {
 			let mut ledger = Self::ledger(Controller(controller))?;
 			let mut value = value.min(ledger.active);
 			let stash = ledger.stash.clone();
-
 			ensure!(
 				ledger.unlocking.len() < T::MaxUnlockingChunks::get() as usize,
 				Error::<T>::NoMoreChunks,
