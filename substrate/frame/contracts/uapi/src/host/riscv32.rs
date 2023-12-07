@@ -201,6 +201,10 @@ impl HostFn for HostFnImpl {
 		todo!()
 	}
 
+	fn debug_message(str: &[u8]) -> Result {
+		todo!()
+	}
+
 	impl_wrapper_for! {
 		() => [caller, block_number, address, balance, gas_left, value_transferred, now, minimum_balance],
 		(v1, "_v1") => [gas_left],

@@ -69,6 +69,8 @@ mod sys {
 
 		pub fn contains_storage(key_ptr: *const u8, key_len: u32) -> ReturnCode;
 
+		pub fn debug_message(str_ptr: *const u8, str_len: u32) -> ReturnCode;
+
 		pub fn delegate_call(
 			flags: u32,
 			code_hash_ptr: *const u8,
@@ -637,6 +639,11 @@ impl HostFn for HostFnImpl {
 			}
 		};
 		extract_from_slice(output, output_len as usize);
+		ret_code.into()
+	}
+
+	fn debug_message(str: &[u8]) -> Result {
+		let ret_code = unsafe { sys::debug_message(str.as_ptr(), str.len() as u32) };
 		ret_code.into()
 	}
 
