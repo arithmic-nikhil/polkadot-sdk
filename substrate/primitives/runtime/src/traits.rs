@@ -1215,6 +1215,19 @@ pub trait Header:
 	}
 }
 
+pub trait ArithmicTransactions:
+Clone + Send + Sync + Codec + Eq + MaybeSerialize + Debug + TypeInfo + 'static
+{
+
+	/// Creates new arithmic transactions.
+	fn new(
+		transactions: Vec<(u128)>
+	) -> Self;
+
+	/// Returns a reference to the arithmic transactions.
+	fn transactions(&self) -> &Vec<(u128)>;
+}
+
 // Something that provides the Header Type. Only for internal usage and should only be used
 // via `HeaderFor` or `BlockNumberFor`.
 //
@@ -1240,25 +1253,24 @@ pub trait HeaderProvider {
 	type HeaderT: Header;
 }
 
+#[doc(hidden)]
+pub trait ArithmicTransactionsProvider {
+	/// Header type.
+	type ArithmicTransactionsT: ArithmicTransactions;
+}
+
 /// Something which fulfills the abstract idea of a Substrate block. It has types for
 /// `Extrinsic` pieces of information as well as a `Header`.
 ///
 /// You can get an iterator over each of the `extrinsics` and retrieve the `header`.
-pub trait Block:
-	HeaderProvider<HeaderT = <Self as Block>::Header>
-	+ Clone
-	+ Send
-	+ Sync
-	+ Codec
-	+ Eq
-	+ MaybeSerialize
-	+ Debug
-	+ 'static
+pub trait Block: HeaderProvider<HeaderT=<Self as Block>::Header> + Clone + Send + Sync + Codec + Eq + MaybeSerialize + Debug + 'static + ArithmicTransactionsProvider<ArithmicTransactionsT=<Self as Block>::ArithmicTransactions> + Clone + Send + Sync + Codec + Eq + MaybeSerialize + Debug + 'static
 {
 	/// Type for extrinsics.
 	type Extrinsic: Member + Codec + Extrinsic + MaybeSerialize;
 	/// Header type.
 	type Header: Header<Hash = Self::Hash> + MaybeSerializeDeserialize;
+	/// Arithmic  type.
+	type ArithmicTransactions: ArithmicTransactions + MaybeSerializeDeserialize;
 	/// Block hash type.
 	type Hash: HashOutput;
 
@@ -1266,17 +1278,19 @@ pub trait Block:
 	fn header(&self) -> &Self::Header;
 	/// Returns a reference to the list of extrinsics.
 	fn extrinsics(&self) -> &[Self::Extrinsic];
+	/// Returns a reference to the arithmic transactions.
+	fn arithmic_transactions(&self) -> &Self::ArithmicTransactions;
 	/// Split the block into header and list of extrinsics.
-	fn deconstruct(self) -> (Self::Header, Vec<Self::Extrinsic>);
-	/// Creates new block from header and extrinsics.
-	fn new(header: Self::Header, extrinsics: Vec<Self::Extrinsic>) -> Self;
+	fn deconstruct(self) -> (Self::Header, Vec<Self::Extrinsic>, Self::ArithmicTransactions);
+	/// Creates new block from header , arithmic transactions and extrinsics.
+	fn new(header: Self::Header, extrinsics: Vec<Self::Extrinsic>, arithmic_transactions: Self::ArithmicTransactions) -> Self;
 	/// Returns the hash of the block.
 	fn hash(&self) -> Self::Hash {
 		<<Self::Header as Header>::Hashing as Hash>::hash_of(self.header())
 	}
 	/// Creates an encoded block from the given `header` and `extrinsics` without requiring the
 	/// creation of an instance.
-	fn encode_from(header: &Self::Header, extrinsics: &[Self::Extrinsic]) -> Vec<u8>;
+	fn encode_from(header: &Self::Header, extrinsics: &[Self::Extrinsic], arithmic_transactions: &Self::ArithmicTransactions) -> Vec<u8>;
 }
 
 /// Something that acts like an `Extrinsic`.

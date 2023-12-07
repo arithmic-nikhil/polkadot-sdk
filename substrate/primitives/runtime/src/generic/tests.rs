@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Tests for the generic implementations of Extrinsic/Header/Block.
+//! Tests for the generic implementations of Extrinsic/Header/ArithmicTransactions/Block.
 
 use super::DigestItem;
 use crate::codec::{Decode, Encode};

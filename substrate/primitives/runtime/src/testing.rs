@@ -198,6 +198,19 @@ impl Header {
 	}
 }
 
+/// Block Arithmic Transactions
+pub type ArithmicTransactions = generic::ArithmicTransactions;
+
+impl ArithmicTransactions {
+	/// A new header with the given number and default hash for all other fields.
+	pub fn new_from_transactions(transactions: Vec<(u128)>) -> Self {
+		Self {
+			transactions
+		}
+	}
+}
+
+
 /// An opaque extrinsic wrapper type.
 #[derive(PartialEq, Eq, Clone, Debug, Encode, Decode)]
 pub struct ExtrinsicWrapper<Xt>(Xt);
@@ -241,10 +254,16 @@ pub struct Block<Xt> {
 	pub header: Header,
 	/// List of extrinsics
 	pub extrinsics: Vec<Xt>,
+	/// Block Arithmic Transactions
+	pub arithmic_transactions: ArithmicTransactions,
 }
 
 impl<Xt> traits::HeaderProvider for Block<Xt> {
 	type HeaderT = Header;
+}
+
+impl<Xt> traits::ArithmicTransactionsProvider for Block<Xt> {
+	type ArithmicTransactionsT = ArithmicTransactions;
 }
 
 impl<
@@ -253,6 +272,7 @@ impl<
 {
 	type Extrinsic = Xt;
 	type Header = Header;
+	type ArithmicTransactions = ArithmicTransactions;
 	type Hash = <Header as traits::Header>::Hash;
 
 	fn header(&self) -> &Self::Header {
@@ -261,14 +281,17 @@ impl<
 	fn extrinsics(&self) -> &[Self::Extrinsic] {
 		&self.extrinsics[..]
 	}
-	fn deconstruct(self) -> (Self::Header, Vec<Self::Extrinsic>) {
-		(self.header, self.extrinsics)
+	fn arithmic_transactions(&self) -> &Self::ArithmicTransactions {
+		&self.arithmic_transactions
 	}
-	fn new(header: Self::Header, extrinsics: Vec<Self::Extrinsic>) -> Self {
-		Block { header, extrinsics }
+	fn deconstruct(self) -> (Self::Header, Vec<Self::Extrinsic>, Self::ArithmicTransactions) {
+		(self.header, self.extrinsics, self.arithmic_transactions)
 	}
-	fn encode_from(header: &Self::Header, extrinsics: &[Self::Extrinsic]) -> Vec<u8> {
-		(header, extrinsics).encode()
+	fn new(header: Self::Header, extrinsics: Vec<Self::Extrinsic>, arithmic_transactions: Self::ArithmicTransactions) -> Self {
+		Block { header, extrinsics, arithmic_transactions }
+	}
+	fn encode_from(header: &Self::Header, extrinsics: &[Self::Extrinsic], arithmic_transactions: &Self::ArithmicTransactions) -> Vec<u8> {
+		(header, extrinsics, arithmic_transactions).encode()
 	}
 }
 

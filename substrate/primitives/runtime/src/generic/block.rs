@@ -26,7 +26,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
 	codec::{Codec, Decode, Encode},
 	traits::{
-		self, Block as BlockT, Header as HeaderT, MaybeSerialize, MaybeSerializeDeserialize,
+		self, Block as BlockT, Header as HeaderT,ArithmicTransactions as ArithmicTransactionsT, MaybeSerialize, MaybeSerializeDeserialize,
 		Member, NumberFor,
 	},
 	Justifications,
@@ -82,27 +82,38 @@ impl<Block: BlockT> fmt::Display for BlockId<Block> {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(rename_all = "camelCase"))]
 #[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
-pub struct Block<Header, Extrinsic> {
+pub struct Block<Header, Extrinsic, ArithmicTransactions> {
 	/// The block header.
 	pub header: Header,
 	/// The accompanying extrinsics.
 	pub extrinsics: Vec<Extrinsic>,
+	/// The accompanying transactions
+	pub arithmic_transactions: ArithmicTransactions,
 }
 
-impl<Header, Extrinsic> traits::HeaderProvider for Block<Header, Extrinsic>
+impl<Header, Extrinsic, ArithmicTransactions> traits::HeaderProvider for Block<Header, Extrinsic, ArithmicTransactions>
 where
 	Header: HeaderT,
 {
 	type HeaderT = Header;
 }
 
-impl<Header, Extrinsic: MaybeSerialize> traits::Block for Block<Header, Extrinsic>
+impl<Header, Extrinsic, ArithmicTransactions> traits::ArithmicTransactionsProvider for Block<Header, Extrinsic, ArithmicTransactions>
+	where
+		ArithmicTransactions: ArithmicTransactionsT,
+{
+	type ArithmicTransactionsT = ArithmicTransactions;
+}
+
+impl<Header, Extrinsic: MaybeSerialize, ArithmicTransactions> traits::Block for Block<Header, Extrinsic, ArithmicTransactions>
 where
 	Header: HeaderT + MaybeSerializeDeserialize,
 	Extrinsic: Member + Codec + traits::Extrinsic,
+	ArithmicTransactions: ArithmicTransactionsT + MaybeSerializeDeserialize,
 {
 	type Extrinsic = Extrinsic;
 	type Header = Header;
+	type ArithmicTransactions = ArithmicTransactions;
 	type Hash = <Self::Header as traits::Header>::Hash;
 
 	fn header(&self) -> &Self::Header {
@@ -111,14 +122,17 @@ where
 	fn extrinsics(&self) -> &[Self::Extrinsic] {
 		&self.extrinsics[..]
 	}
-	fn deconstruct(self) -> (Self::Header, Vec<Self::Extrinsic>) {
-		(self.header, self.extrinsics)
+	fn arithmic_transactions(&self) -> &Self::ArithmicTransactions {
+		&self.arithmic_transactions
 	}
-	fn new(header: Self::Header, extrinsics: Vec<Self::Extrinsic>) -> Self {
-		Block { header, extrinsics }
+	fn deconstruct(self) -> (Self::Header, Vec<Self::Extrinsic>, Self::ArithmicTransactions) {
+		(self.header, self.extrinsics, self.arithmic_transactions)
 	}
-	fn encode_from(header: &Self::Header, extrinsics: &[Self::Extrinsic]) -> Vec<u8> {
-		(header, extrinsics).encode()
+	fn new(header: Self::Header, extrinsics: Vec<Self::Extrinsic>, arithmic_transactions: Self::ArithmicTransactions) -> Self {
+		Block { header, extrinsics, arithmic_transactions }
+	}
+	fn encode_from(header: &Self::Header, extrinsics: &[Self::Extrinsic], arithmic_transactions: &Self::ArithmicTransactions) -> Vec<u8> {
+		(header, extrinsics, arithmic_transactions).encode()
 	}
 }
 

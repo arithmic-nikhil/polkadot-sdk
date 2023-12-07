@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! Generic implementations of [`crate::traits::Header`], [`crate::traits::Block`] and
+//! Generic implementations of [`crate::traits::Header`], [`crate::traits::ArithmicTransactions`], [`crate::traits::Block`],  and
 //! [`crate::traits::Extrinsic`].
 
 mod block;
@@ -23,6 +23,7 @@ mod checked_extrinsic;
 mod digest;
 mod era;
 mod header;
+mod arithmic_transactions;
 #[cfg(test)]
 mod tests;
 mod unchecked_extrinsic;
@@ -33,5 +34,6 @@ pub use self::{
 	digest::{Digest, DigestItem, DigestItemRef, OpaqueDigestItemId},
 	era::{Era, Phase},
 	header::Header,
+	arithmic_transactions::ArithmicTransactions,
 	unchecked_extrinsic::{SignedPayload, UncheckedExtrinsic},
 };

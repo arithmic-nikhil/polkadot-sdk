@@ -20,16 +20,16 @@
 //! This crate, among other things, contains a large library of types and utilities that are used in
 //! the Substrate runtime, but are not particularly `FRAME`-oriented.
 //!
-//! ## Block, Header and Extrinsics
+//! ## Block, Header, Arithmic Transactions and Extrinsics
 //!
 //! Most notable, this crate contains some of the types and trait that enable important
 //! communication between the client and the runtime. This includes:
 //!
-//! - A set of traits to declare what any block/header/extrinsic type should provide.
-//! 	- [`traits::Block`], [`traits::Header`], [`traits::Extrinsic`]
+//! - A set of traits to declare what any block/header/arithmic transactions/extrinsic type should provide.
+//! 	- [`traits::Block`], [`traits::Header`], [`traits::ArithmicTransactions`], [`traits::Extrinsic`]
 //! - A set of types that implement these traits, whilst still providing a high degree of
 //!   configurability via generics.
-//! 	- [`generic::Block`], [`generic::Header`], [`generic::UncheckedExtrinsic`] and
+//! 	- [`generic::Block`], [`generic::Header`], [`generic::ArithmicTransactions`],[`generic::UncheckedExtrinsic`] and
 //!    [`generic::CheckedExtrinsic`]
 //!
 //! ## Runtime API Types
