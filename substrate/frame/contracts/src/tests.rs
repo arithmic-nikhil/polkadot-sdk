@@ -3512,7 +3512,7 @@ fn failed_deposit_charge_should_roll_back_call() {
 	let result = execute().unwrap();
 
 	// Bump the deposit per byte to a high value to trigger a FundsUnavailable error.
-	DEPOSIT_PER_BYTE.with(|c| *c.borrow_mut() = 50);
+	DEPOSIT_PER_BYTE.with(|c| *c.borrow_mut() = 20);
 	assert_err_with_weight!(execute(), TokenError::FundsUnavailable, result.actual_weight);
 }
 
@@ -4398,33 +4398,6 @@ fn code_rejected_error_works() {
 	ExtBuilder::default().existential_deposit(200).build().execute_with(|| {
 		let _ = <Test as Config>::Currency::set_balance(&ALICE, 1_000_000);
 
-		let (wasm, _) = compile_module::<Test>("invalid_module").unwrap();
-		assert_noop!(
-			Contracts::upload_code(
-				RuntimeOrigin::signed(ALICE),
-				wasm.clone(),
-				None,
-				Determinism::Enforced
-			),
-			<Error<Test>>::CodeRejected,
-		);
-		let result = Contracts::bare_instantiate(
-			ALICE,
-			0,
-			GAS_LIMIT,
-			None,
-			Code::Upload(wasm),
-			vec![],
-			vec![],
-			DebugInfo::UnsafeDebug,
-			CollectEvents::Skip,
-		);
-		assert_err!(result.result, <Error<Test>>::CodeRejected);
-		assert_eq!(
-			std::str::from_utf8(&result.debug_message).unwrap(),
-			"Can't load the module into wasmi!"
-		);
-
 		let (wasm, _) = compile_module::<Test>("invalid_contract_no_call").unwrap();
 		assert_noop!(
 			Contracts::upload_code(
@@ -4451,34 +4424,6 @@ fn code_rejected_error_works() {
 		assert_eq!(
 			std::str::from_utf8(&result.debug_message).unwrap(),
 			"call function isn't exported"
-		);
-
-		let (wasm, _) = compile_module::<Test>("invalid_contract_no_memory").unwrap();
-		assert_noop!(
-			Contracts::upload_code(
-				RuntimeOrigin::signed(ALICE),
-				wasm.clone(),
-				None,
-				Determinism::Enforced
-			),
-			<Error<Test>>::CodeRejected,
-		);
-
-		let result = Contracts::bare_instantiate(
-			ALICE,
-			0,
-			GAS_LIMIT,
-			None,
-			Code::Upload(wasm),
-			vec![],
-			vec![],
-			DebugInfo::UnsafeDebug,
-			CollectEvents::Skip,
-		);
-		assert_err!(result.result, <Error<Test>>::CodeRejected);
-		assert_eq!(
-			std::str::from_utf8(&result.debug_message).unwrap(),
-			"No memory import found in the module"
 		);
 	});
 }

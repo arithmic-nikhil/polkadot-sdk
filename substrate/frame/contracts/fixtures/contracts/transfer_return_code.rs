@@ -14,12 +14,25 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//! Valid module but missing the call function
+
 #![no_std]
 #![no_main]
 
 extern crate common;
+use uapi::{HostFn, HostFnImpl as api};
 
 #[no_mangle]
 #[polkavm_derive::polkavm_export]
 pub extern "C" fn deploy() {}
+
+#[no_mangle]
+#[polkavm_derive::polkavm_export]
+pub extern "C" fn call() {
+	let ret_code = match api::transfer(&[0u8; 32], &100u64.to_le_bytes()) {
+		Ok(_) => 0u32,
+		Err(code) => code as u32,
+	};
+
+	// exit with success and take transfer return code to the output buffer
+	api::return_value(uapi::ReturnFlags::empty(), &ret_code.to_le_bytes());
+}

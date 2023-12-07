@@ -14,12 +14,28 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//! Valid module but missing the call function
+
 #![no_std]
 #![no_main]
 
-extern crate common;
+use common::input;
+use uapi::{HostFn, HostFnImpl as api};
 
 #[no_mangle]
 #[polkavm_derive::polkavm_export]
-pub extern "C" fn deploy() {}
+pub extern "C" fn deploy() {
+	input!(len: u32, );
+
+	let buffer = [0u8; 16 * 1024 + 1];
+	let data = &buffer[..len as usize];
+
+	// place a garbage value in storage, the size of which is specified by the call input.
+	let mut key = [0u8; 32];
+	key[0] = 1;
+
+	api::set_storage(&key, &data);
+}
+
+#[no_mangle]
+#[polkavm_derive::polkavm_export]
+pub extern "C" fn call() {}

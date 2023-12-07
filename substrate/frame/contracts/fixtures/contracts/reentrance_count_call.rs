@@ -20,7 +20,7 @@
 #![no_std]
 #![no_main]
 
-use common::input;
+use common::{input, output};
 use uapi::{HostFn, HostFnImpl as api};
 
 #[no_mangle]
@@ -33,8 +33,7 @@ pub extern "C" fn call() {
 	input!(expected_reentrance_count: u32,);
 
 	// Read the contract address.
-	let mut addr = [0u8; 32];
-	api::address(&mut &mut addr[..]);
+	output!(addr, [0u8; 32], api::address,);
 
 	#[allow(deprecated)]
 	let reentrance_count = api::reentrance_count();

@@ -279,7 +279,7 @@ impl HostFn for HostFnImpl {
 		todo!()
 	}
 
-	fn xcm_send(dest: &[u8], msg: &[u8], output: &mut &mut [u8]) -> Result {
+	fn xcm_send(dest: &[u8], msg: &[u8], output: &mut [u8; 32]) -> Result {
 		todo!()
 	}
 }

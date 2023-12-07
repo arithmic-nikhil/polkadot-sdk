@@ -14,12 +14,25 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//! Valid module but missing the call function
+
 #![no_std]
 #![no_main]
 
-extern crate common;
+use common::input;
+use uapi::{HostFn, HostFnImpl as api};
 
 #[no_mangle]
 #[polkavm_derive::polkavm_export]
 pub extern "C" fn deploy() {}
+
+#[no_mangle]
+#[polkavm_derive::polkavm_export]
+pub extern "C" fn call() {
+	input!(512, dest: [u8; 3], msg: [u8],);
+
+	let mut message_id = [0u8; 32];
+
+	#[allow(deprecated)]
+	api::xcm_send(dest, msg, &mut message_id).unwrap();
+	api::return_value(uapi::ReturnFlags::empty(), &message_id);
+}

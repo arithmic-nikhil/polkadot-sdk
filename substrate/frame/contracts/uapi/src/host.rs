@@ -790,5 +790,5 @@ pub trait HostFn {
 	#[deprecated(
 		note = "Unstable function. Behaviour can change without further notice. Use only for testing."
 	)]
-	fn xcm_send(dest: &[u8], msg: &[u8], output: &mut &mut [u8]) -> Result;
+	fn xcm_send(dest: &[u8], msg: &[u8], output: &mut [u8; 32]) -> Result;
 }
