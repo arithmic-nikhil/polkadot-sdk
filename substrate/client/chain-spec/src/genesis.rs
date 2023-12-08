@@ -24,9 +24,10 @@ use sc_client_api::{backend::Backend, BlockImportOperation};
 use sc_executor::RuntimeVersionOf;
 use sp_core::storage::{well_known_keys, StateVersion, Storage};
 use sp_runtime::{
-	traits::{Block as BlockT, Hash as HashT, Header as HeaderT, Zero},
+	traits::{Block as BlockT, Hash as HashT, Header as HeaderT, ArithmicTransactions as ArithmicTransactionsT, Zero},
 	BuildStorage,
 };
+use sp_runtime::traits::ArithmicTransactions;
 
 /// Return the state version given the genesis storage and executor.
 pub fn resolve_state_version_from_wasm<E>(
@@ -79,6 +80,9 @@ pub fn construct_genesis_block<Block: BlockT>(
 			Default::default(),
 		),
 		Default::default(),
+		<<Block as BlockT>::ArithmicTransactions as ArithmicTransactionsT>::new(
+			Default::default(),
+		),
 	)
 }
 
