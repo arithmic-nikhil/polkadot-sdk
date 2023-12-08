@@ -146,9 +146,13 @@ impl<TBlock: Block, TPrinter: PrettyPrinter<TBlock>> Inspector<TBlock, TPrinter>
 					.chain
 					.block_body(hash)?
 					.ok_or_else(|| Error::NotFound(not_found.clone()))?;
+				let arithmic_transactions = self
+					.chain
+					.arithmic_transactions(hash)?
+					.ok_or_else(|| Error::NotFound(not_found.clone()))?;
 				let header =
 					self.chain.header(hash)?.ok_or_else(|| Error::NotFound(not_found.clone()))?;
-				TBlock::new(header, body)
+				TBlock::new(header, body, arithmic_transactions)
 			},
 			BlockAddress::Hash(hash) => {
 				let not_found = format!("Could not find block {:?}", BlockId::<TBlock>::Hash(hash));
@@ -156,9 +160,13 @@ impl<TBlock: Block, TPrinter: PrettyPrinter<TBlock>> Inspector<TBlock, TPrinter>
 					.chain
 					.block_body(hash)?
 					.ok_or_else(|| Error::NotFound(not_found.clone()))?;
+				let arithmic_transactions = self
+					.chain
+					.block_body(hash)?
+					.ok_or_else(|| Error::NotFound(not_found.clone()))?;
 				let header =
 					self.chain.header(hash)?.ok_or_else(|| Error::NotFound(not_found.clone()))?;
-				TBlock::new(header, body)
+				TBlock::new(header, body, arithmic_transactions)
 			},
 		})
 	}
