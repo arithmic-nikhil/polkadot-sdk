@@ -34,6 +34,8 @@ use crate::error::{Error, Result};
 pub trait HeaderBackend<Block: BlockT>: Send + Sync {
 	/// Get block header. Returns `None` if block is not found.
 	fn header(&self, hash: Block::Hash) -> Result<Option<Block::Header>>;
+	/// Get block arithmic transactions. Returns `None` if block is not found.
+	fn arithmic_transactions(&self, hash: Block::Hash) -> Result<Option<Block::ArithmicTransactions>>;
 	/// Get blockchain info.
 	fn info(&self) -> Info<Block>;
 	/// Get block status.

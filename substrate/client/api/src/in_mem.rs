@@ -340,6 +340,13 @@ impl<Block: BlockT> HeaderBackend<Block> for Blockchain<Block> {
 		Ok(self.storage.read().blocks.get(&hash).map(|b| b.header().clone()))
 	}
 
+	fn arithmic_transactions(
+		&self,
+		hash: Block::Hash,
+	) -> sp_blockchain::Result<Option<<Block as BlockT>::ArithmicTransactions>> {
+		Ok(self.storage.read().blocks.get(&hash).map(|b| b.clone().into_inner().2))
+	}
+
 	fn info(&self) -> blockchain::Info<Block> {
 		let storage = self.storage.read();
 		blockchain::Info {

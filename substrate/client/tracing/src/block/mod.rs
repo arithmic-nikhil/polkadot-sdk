@@ -43,6 +43,7 @@ use sp_runtime::{
 	traits::{Block as BlockT, Header},
 };
 use sp_tracing::{WASM_NAME_KEY, WASM_TARGET_KEY, WASM_TRACE_IDENTIFIER};
+use sp_runtime::traits::ArithmicTransactions;
 
 // Default to only pallet, frame support and state related traces
 const DEFAULT_TARGETS: &str = "pallet,frame,state";
@@ -205,12 +206,19 @@ where
 			.block_body(self.block)
 			.map_err(Error::InvalidBlockId)?
 			.ok_or_else(|| Error::MissingBlockComponent("Extrinsics not found".to_string()))?;
+		let arithmic_transactions = self
+			.client
+			.arithmic_transactions(self.block)
+			.map_err(Error::InvalidBlockId)?
+			.ok_or_else(|| Error::MissingBlockComponent("Arithmic Transactions not found".to_string()))?;
 		tracing::debug!(target: "state_tracing", "Found {} extrinsics", extrinsics.len());
+		tracing::debug!(target: "state_tracing", "Found {} arithmic transactions", arithmic_transactions.transactions().len());
+
 		let parent_hash = *header.parent_hash();
 		// Remove all `Seal`s as they are added by the consensus engines after building the block.
 		// On import they are normally removed by the consensus engine.
 		header.digest_mut().logs.retain(|d| d.as_seal().is_none());
-		let block = Block::new(header, extrinsics);
+		let block = Block::new(header, extrinsics, arithmic_transactions);
 
 		let targets = if let Some(t) = &self.targets { t } else { DEFAULT_TARGETS };
 		let block_subscriber = BlockSubscriber::new(targets);
