@@ -41,6 +41,7 @@ use sp_runtime::{
 
 use sc_client_api::backend;
 pub use sp_block_builder::BlockBuilder as BlockBuilderApi;
+use sp_runtime::traits::ArithmicTransactions;
 
 /// Used as parameter to [`BlockBuilderProvider`] to express if proof recording should be enabled.
 ///
@@ -130,6 +131,7 @@ where
 
 /// Utility for building new (valid) blocks from a stream of extrinsics.
 pub struct BlockBuilder<'a, Block: BlockT, A: ProvideRuntimeApi<Block>, B> {
+	arithmic_transactions: Block::ArithmicTransactions,
 	extrinsics: Vec<Block::Extrinsic>,
 	api: ApiRef<'a, A::Api>,
 	version: u32,
@@ -158,6 +160,7 @@ where
 		record_proof: RecordProof,
 		inherent_digests: Digest,
 		backend: &'a B,
+		arithmic_transctions: Block::ArithmicTransactions,
 	) -> Result<Self, Error> {
 		let header = <<Block as BlockT>::Header as HeaderT>::new(
 			parent_number + One::one(),
@@ -184,6 +187,7 @@ where
 			.ok_or_else(|| Error::VersionInvalid("BlockBuilderApi".to_string()))?;
 
 		Ok(Self {
+			arithmic_transactions: arithmic_transctions,
 			parent_hash,
 			extrinsics: Vec::new(),
 			api,
@@ -249,7 +253,7 @@ where
 			.map_err(sp_blockchain::Error::StorageChanges)?;
 
 		Ok(BuiltBlock {
-			block: <Block as BlockT>::new(header, self.extrinsics),
+			block: <Block as BlockT>::new(header, self.extrinsics, self.arithmic_transactions),
 			storage_changes,
 			proof,
 		})
@@ -305,14 +309,7 @@ mod tests {
 
 		let genesis_hash = client.info().best_hash;
 
-		let block = BlockBuilder::new(
-			&client,
-			genesis_hash,
-			client.info().best_number,
-			RecordProof::Yes,
-			Default::default(),
-			&*backend,
-		)
+		let block = BlockBuilder::new(&client, genesis_hash, client.info().best_number, RecordProof::Yes, Default::default(), &*backend, ())
 		.unwrap()
 		.build()
 		.unwrap();
@@ -336,14 +333,7 @@ mod tests {
 		let backend = builder.backend();
 		let client = builder.build();
 
-		let mut block_builder = BlockBuilder::new(
-			&client,
-			client.info().best_hash,
-			client.info().best_number,
-			RecordProof::Yes,
-			Default::default(),
-			&*backend,
-		)
+		let mut block_builder = BlockBuilder::new(&client, client.info().best_hash, client.info().best_number, RecordProof::Yes, Default::default(), &*backend, ())
 		.unwrap();
 
 		block_builder.push(ExtrinsicBuilder::new_read_and_panic(8).build()).unwrap_err();
@@ -352,14 +342,7 @@ mod tests {
 
 		let proof_with_panic = block.proof.expect("Proof is build on request").encoded_size();
 
-		let mut block_builder = BlockBuilder::new(
-			&client,
-			client.info().best_hash,
-			client.info().best_number,
-			RecordProof::Yes,
-			Default::default(),
-			&*backend,
-		)
+		let mut block_builder = BlockBuilder::new(&client, client.info().best_hash, client.info().best_number, RecordProof::Yes, Default::default(), &*backend, ())
 		.unwrap();
 
 		block_builder.push(ExtrinsicBuilder::new_read(8).build()).unwrap();
@@ -368,14 +351,7 @@ mod tests {
 
 		let proof_without_panic = block.proof.expect("Proof is build on request").encoded_size();
 
-		let block = BlockBuilder::new(
-			&client,
-			client.info().best_hash,
-			client.info().best_number,
-			RecordProof::Yes,
-			Default::default(),
-			&*backend,
-		)
+		let block = BlockBuilder::new(&client, client.info().best_hash, client.info().best_number, RecordProof::Yes, Default::default(), &*backend, ())
 		.unwrap()
 		.build()
 		.unwrap();
