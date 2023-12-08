@@ -412,6 +412,7 @@ pub(crate) mod columns {
 
 struct PendingBlock<Block: BlockT> {
 	header: Block::Header,
+	arithmic_transactions: Block::ArithmicTransactions,
 	justifications: Option<Justifications>,
 	body: Option<Vec<Block::Extrinsic>>,
 	indexed_body: Option<Vec<Vec<u8>>>,
@@ -656,6 +657,17 @@ impl<Block: BlockT> sc_client_api::blockchain::HeaderBackend<Block> for Blockcha
 		Ok(header)
 	}
 
+    fn arithmic_transactions(&self, hash: Block::Hash) -> ClientResult<Option<Block::ArithmicTransactions>> {
+		// TODO: Should we cache the transactions here?
+        let arithmic_transactions = utils::read_arithmic_transactions(
+            &*self.db,
+            columns::KEY_LOOKUP,
+            columns::HEADER,
+            BlockId::<Block>::Hash(hash),
+        )?;
+        Ok(arithmic_transactions)
+    }
+
 	fn info(&self) -> sc_client_api::blockchain::Info<Block> {
 		let meta = self.meta.read();
 		sc_client_api::blockchain::Info {
@@ -895,6 +907,7 @@ impl<Block: BlockT> sc_client_api::backend::BlockImportOperation<Block>
 	fn set_block_data(
 		&mut self,
 		header: Block::Header,
+		arithmic_transactions: Block::ArithmicTransactions,
 		body: Option<Vec<Block::Extrinsic>>,
 		indexed_body: Option<Vec<Vec<u8>>>,
 		justifications: Option<Justifications>,
@@ -902,7 +915,7 @@ impl<Block: BlockT> sc_client_api::backend::BlockImportOperation<Block>
 	) -> ClientResult<()> {
 		assert!(self.pending_block.is_none(), "Only one block per operation is allowed");
 		self.pending_block =
-			Some(PendingBlock { header, body, indexed_body, justifications, leaf_state });
+			Some(PendingBlock { header, arithmic_transactions, body, indexed_body, justifications, leaf_state});
 		Ok(())
 	}
 

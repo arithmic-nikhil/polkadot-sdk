@@ -465,6 +465,21 @@ pub fn read_header<Block: BlockT>(
 	}
 }
 
+pub fn read_arithmic_transactions<Block: BlockT>(
+	db: &dyn Database<DbHash>,
+	col_index: u32,
+	col: u32,
+	id: BlockId<Block>,
+) -> sp_blockchain::Result<Option<Block::ArithmicTransactions>> {
+	match read_db(db, col_index, col, id)? {
+		Some(arithmic_transactions) => match Block::ArithmicTransactions::decode(&mut &arithmic_transactions[..]) {
+			Ok(arithmic_transactions) => Ok(Some(arithmic_transactions)),
+			Err(_) => Err(sp_blockchain::Error::Backend("Error decoding arithmic transactions".into())),
+		},
+		None => Ok(None),
+	}
+}
+
 /// Read meta from the database.
 pub fn read_meta<Block>(
 	db: &dyn Database<DbHash>,
