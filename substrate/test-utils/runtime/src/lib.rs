@@ -1053,7 +1053,7 @@ mod tests {
 		// Create a block that sets the `:heap_pages` to 32 pages of memory which corresponds to
 		// ~2048k of heap memory.
 		let (new_at_hash, block) = {
-			let mut builder = client.new_block(Default::default()).unwrap();
+			let mut builder = client.new_block(Default::default(), Default::default()).unwrap();
 			builder.push_storage_change(HEAP_PAGES.to_vec(), Some(32u64.encode())).unwrap();
 			let block = builder.build().unwrap().block;
 			let hash = block.header.hash();

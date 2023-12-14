@@ -120,7 +120,7 @@ async fn setup_api() -> (
 	let sub_id = sub.subscription_id();
 	let sub_id = serde_json::to_string(&sub_id).unwrap();
 
-	let block = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	client.import(BlockOrigin::Own, block.clone()).await.unwrap();
 
 	// Ensure the imported block is propagated and pinned for this subscription.
@@ -172,7 +172,7 @@ async fn follow_subscription_produces_blocks() {
 	});
 	assert_eq!(event, expected);
 
-	let block = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 
 	let best_hash = block.header.hash();
 	client.import(BlockOrigin::Own, block.clone()).await.unwrap();
@@ -250,7 +250,7 @@ async fn follow_with_runtime() {
 
 	// Import a new block without runtime changes.
 	// The runtime field must be None in this case.
-	let block = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	let best_hash = block.header.hash();
 	client.import(BlockOrigin::Own, block.clone()).await.unwrap();
 
@@ -297,7 +297,7 @@ async fn follow_with_runtime() {
 	)
 	.unwrap();
 
-	let mut builder = client.new_block(Default::default()).unwrap();
+	let mut builder = client.new_block(Default::default(), Default::default()).unwrap();
 	builder.push_storage_change(CODE.to_vec(), Some(wasm)).unwrap();
 	let block = builder.build().unwrap().block;
 	let best_hash = block.header.hash();
@@ -405,7 +405,7 @@ async fn get_body() {
 	);
 
 	// Import a block with extrinsics.
-	let mut builder = client.new_block(Default::default()).unwrap();
+	let mut builder = client.new_block(Default::default(), Default::default()).unwrap();
 	builder
 		.push_transfer(runtime::Transfer {
 			from: AccountKeyring::Alice.into(),
@@ -548,7 +548,7 @@ async fn call_runtime_without_flag() {
 	let sub_id = sub.subscription_id();
 	let sub_id = serde_json::to_string(&sub_id).unwrap();
 
-	let block = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	let block_hash = format!("{:?}", block.header.hash());
 	client.import(BlockOrigin::Own, block.clone()).await.unwrap();
 
@@ -642,7 +642,7 @@ async fn get_storage_hash() {
 	);
 
 	// Import a new block with storage changes.
-	let mut builder = client.new_block(Default::default()).unwrap();
+	let mut builder = client.new_block(Default::default(), Default::default()).unwrap();
 	builder.push_storage_change(KEY.to_vec(), Some(VALUE.to_vec())).unwrap();
 	let block = builder.build().unwrap().block;
 	let block_hash = format!("{:?}", block.header.hash());
@@ -728,7 +728,7 @@ async fn get_storage_multi_query_iter() {
 	let key = hex_string(&KEY);
 
 	// Import a new block with storage changes.
-	let mut builder = client.new_block(Default::default()).unwrap();
+	let mut builder = client.new_block(Default::default(), Default::default()).unwrap();
 	builder.push_storage_change(KEY.to_vec(), Some(VALUE.to_vec())).unwrap();
 	let block = builder.build().unwrap().block;
 	let block_hash = format!("{:?}", block.header.hash());
@@ -902,7 +902,7 @@ async fn get_storage_value() {
 	);
 
 	// Import a new block with storage changes.
-	let mut builder = client.new_block(Default::default()).unwrap();
+	let mut builder = client.new_block(Default::default(), Default::default()).unwrap();
 	builder.push_storage_change(KEY.to_vec(), Some(VALUE.to_vec())).unwrap();
 	let block = builder.build().unwrap().block;
 	let block_hash = format!("{:?}", block.header.hash());
@@ -1193,7 +1193,7 @@ async fn separate_operation_ids_for_subscriptions() {
 	let sub_id_second = sub_second.subscription_id();
 	let sub_id_second = serde_json::to_string(&sub_id_second).unwrap();
 
-	let block = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	client.import(BlockOrigin::Own, block.clone()).await.unwrap();
 	let block_hash = format!("{:?}", block.header.hash());
 
@@ -1270,16 +1270,16 @@ async fn follow_generates_initial_blocks() {
 	// Block tree:
 	// finalized -> block 1 -> block 2 -> block 4
 	//           -> block 1 -> block 3
-	let block_1 = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block_1 = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	let block_1_hash = block_1.header.hash();
 	client.import(BlockOrigin::Own, block_1.clone()).await.unwrap();
 
-	let block_2 = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block_2 = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	let block_2_hash = block_2.header.hash();
 	client.import(BlockOrigin::Own, block_2.clone()).await.unwrap();
 
 	let mut block_builder =
-		client.new_block_at(block_1.header.hash(), Default::default(), false).unwrap();
+		client.new_block_at(block_1.header.hash(), Default::default(), false, Default::default()).unwrap();
 	// This push is required as otherwise block 3 has the same hash as block 2 and won't get
 	// imported
 	block_builder
@@ -1341,7 +1341,7 @@ async fn follow_generates_initial_blocks() {
 	assert_eq!(event, expected);
 
 	// Import block 4.
-	let block_4 = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block_4 = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	let block_4_hash = block_4.header.hash();
 	client.import(BlockOrigin::Own, block_4.clone()).await.unwrap();
 
@@ -1399,7 +1399,7 @@ async fn follow_exceeding_pinned_blocks() {
 
 	let mut sub = api.subscribe("chainHead_unstable_follow", [false]).await.unwrap();
 
-	let block = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	client.import(BlockOrigin::Own, block.clone()).await.unwrap();
 
 	// Ensure the imported block is propagated and pinned for this subscription.
@@ -1420,13 +1420,13 @@ async fn follow_exceeding_pinned_blocks() {
 	//   finalized_block -> block -> block2
 	// The first 2 blocks are pinned into the subscription, but the block2 will exceed the limit (2
 	// blocks).
-	let block2 = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block2 = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	client.import(BlockOrigin::Own, block2.clone()).await.unwrap();
 
 	assert_matches!(get_next_event::<FollowEvent<String>>(&mut sub).await, FollowEvent::Stop);
 
 	// Subscription will not produce any more event for further blocks.
-	let block3 = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block3 = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	client.import(BlockOrigin::Own, block3.clone()).await.unwrap();
 
 	assert!(sub.next::<FollowEvent<String>>().await.is_none());
@@ -1456,7 +1456,7 @@ async fn follow_with_unpin() {
 	let sub_id = sub.subscription_id();
 	let sub_id = serde_json::to_string(&sub_id).unwrap();
 
-	let block = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	let block_hash = format!("{:?}", block.header.hash());
 	client.import(BlockOrigin::Own, block.clone()).await.unwrap();
 
@@ -1497,7 +1497,7 @@ async fn follow_with_unpin() {
 	// Block tree:
 	//   finalized_block -> block -> block2
 	//                      ^ has been unpinned
-	let block2 = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block2 = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	client.import(BlockOrigin::Own, block2.clone()).await.unwrap();
 
 	assert_matches!(
@@ -1510,7 +1510,7 @@ async fn follow_with_unpin() {
 		FollowEvent::BestBlockChanged(_)
 	);
 
-	let block3 = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block3 = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	client.import(BlockOrigin::Own, block3.clone()).await.unwrap();
 
 	assert_matches!(get_next_event::<FollowEvent<String>>(&mut sub).await, FollowEvent::Stop);
@@ -1561,20 +1561,20 @@ async fn follow_prune_best_block() {
 	// best block 2 to be reported as pruned. Pruning is happening at
 	// height (N - 1), where N is the finalized block number.
 
-	let block_1 = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block_1 = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	let block_1_hash = block_1.header.hash();
 	client.import(BlockOrigin::Own, block_1.clone()).await.unwrap();
 
-	let block_3 = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block_3 = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	let block_3_hash = block_3.header.hash();
 	client.import(BlockOrigin::Own, block_3.clone()).await.unwrap();
 
-	let block_4 = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block_4 = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	let block_4_hash = block_4.header.hash();
 	client.import(BlockOrigin::Own, block_4.clone()).await.unwrap();
 
 	// Import block 2 as best on the fork.
-	let mut block_builder = client.new_block_at(block_1_hash, Default::default(), false).unwrap();
+	let mut block_builder = client.new_block_at(block_1_hash, Default::default(), false, Default::default()).unwrap();
 	// This push is required as otherwise block 3 has the same hash as block 2 and won't get
 	// imported
 	block_builder
@@ -1705,19 +1705,19 @@ async fn follow_forks_pruned_block() {
 	//           -> block 1 -> block 4 -> block 5
 	//
 
-	let block_1 = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block_1 = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	client.import(BlockOrigin::Own, block_1.clone()).await.unwrap();
 
-	let block_2 = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block_2 = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	client.import(BlockOrigin::Own, block_2.clone()).await.unwrap();
 
-	let block_3 = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block_3 = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	let block_3_hash = block_3.header.hash();
 	client.import(BlockOrigin::Own, block_3.clone()).await.unwrap();
 
 	// Block 4 with parent Block 1 is not the best imported.
 	let mut block_builder =
-		client.new_block_at(block_1.header.hash(), Default::default(), false).unwrap();
+		client.new_block_at(block_1.header.hash(), Default::default(), false, Default::default()).unwrap();
 	// This push is required as otherwise block 4 has the same hash as block 2 and won't get
 	// imported
 	block_builder
@@ -1732,7 +1732,7 @@ async fn follow_forks_pruned_block() {
 	client.import(BlockOrigin::Own, block_4.clone()).await.unwrap();
 
 	let mut block_builder =
-		client.new_block_at(block_4.header.hash(), Default::default(), false).unwrap();
+		client.new_block_at(block_4.header.hash(), Default::default(), false, Default::default()).unwrap();
 	block_builder
 		.push_transfer(Transfer {
 			from: AccountKeyring::Bob.into(),
@@ -1766,7 +1766,7 @@ async fn follow_forks_pruned_block() {
 	//
 	// Mark block 6 as finalized to force block 4 and 5 to get pruned.
 
-	let block_6 = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block_6 = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	let block_6_hash = block_6.header.hash();
 	client.import(BlockOrigin::Own, block_6.clone()).await.unwrap();
 
@@ -1824,21 +1824,21 @@ async fn follow_report_multiple_pruned_block() {
 
 	let finalized_hash = client.info().finalized_hash;
 
-	let block_1 = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block_1 = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	let block_1_hash = block_1.header.hash();
 	client.import(BlockOrigin::Own, block_1.clone()).await.unwrap();
 
-	let block_2 = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block_2 = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	let block_2_hash = block_2.header.hash();
 	client.import(BlockOrigin::Own, block_2.clone()).await.unwrap();
 
-	let block_3 = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block_3 = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	let block_3_hash = block_3.header.hash();
 	client.import(BlockOrigin::Own, block_3.clone()).await.unwrap();
 
 	// Block 4 with parent Block 1 is not the best imported.
 	let mut block_builder =
-		client.new_block_at(block_1.header.hash(), Default::default(), false).unwrap();
+		client.new_block_at(block_1.header.hash(), Default::default(), false, Default::default()).unwrap();
 	// This push is required as otherwise block 4 has the same hash as block 2 and won't get
 	// imported
 	block_builder
@@ -1854,7 +1854,7 @@ async fn follow_report_multiple_pruned_block() {
 	client.import(BlockOrigin::Own, block_4.clone()).await.unwrap();
 
 	let mut block_builder =
-		client.new_block_at(block_4.header.hash(), Default::default(), false).unwrap();
+		client.new_block_at(block_4.header.hash(), Default::default(), false, Default::default()).unwrap();
 	block_builder
 		.push_transfer(Transfer {
 			from: AccountKeyring::Bob.into(),
@@ -1953,7 +1953,7 @@ async fn follow_report_multiple_pruned_block() {
 	//
 	// Mark block 6 as finalized to force block 4 and 5 to get pruned.
 
-	let block_6 = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block_6 = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	let block_6_hash = block_6.header.hash();
 	client.import(BlockOrigin::Own, block_6.clone()).await.unwrap();
 
@@ -2046,7 +2046,7 @@ async fn pin_block_references() {
 	let sub_id = sub.subscription_id();
 	let sub_id = serde_json::to_string(&sub_id).unwrap();
 
-	let block = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	let hash = block.header.hash();
 	let block_hash = format!("{:?}", hash);
 	client.import(BlockOrigin::Own, block.clone()).await.unwrap();
@@ -2083,7 +2083,7 @@ async fn pin_block_references() {
 	// Add another 2 blocks and make sure we drop the subscription with the blocks pinned.
 	let mut hashes = Vec::new();
 	for _ in 0..2 {
-		let block = client.new_block(Default::default()).unwrap().build().unwrap().block;
+		let block = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 		let hash = block.header.hash();
 		client.import(BlockOrigin::Own, block.clone()).await.unwrap();
 
@@ -2109,7 +2109,7 @@ async fn pin_block_references() {
 	drop(sub);
 	// The `chainHead` detects the subscription was terminated when it tries
 	// to send another block.
-	let block = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	client.import(BlockOrigin::Own, block.clone()).await.unwrap();
 
 	for hash in &hashes {

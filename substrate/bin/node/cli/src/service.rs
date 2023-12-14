@@ -792,7 +792,7 @@ mod tests {
 				.expect("Error making test block")
 				.block;
 
-				let (new_header, new_body) = new_block.deconstruct();
+				let (new_header, new_body, arithmic_data) = new_block.deconstruct();
 				let pre_hash = new_header.hash();
 				// sign the pre-sealed hash of the block and then
 				// add it to a digest item.
@@ -807,6 +807,7 @@ mod tests {
 				let mut params = BlockImportParams::new(BlockOrigin::File, new_header);
 				params.post_digests.push(item);
 				params.body = Some(new_body);
+				params.arithmic_data = arithmic_data;
 				params.insert_intermediate(
 					INTERMEDIATE_KEY,
 					BabeIntermediate::<Block> { epoch_descriptor },

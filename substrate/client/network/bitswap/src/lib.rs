@@ -468,7 +468,7 @@ mod tests {
 	#[tokio::test]
 	async fn transaction_found() {
 		let mut client = TestClientBuilder::with_tx_storage(u32::MAX).build();
-		let mut block_builder = client.new_block(Default::default()).unwrap();
+		let mut block_builder = client.new_block(Default::default(), Default::default()).unwrap();
 
 		// encoded extrinsic: [161, .. , 2, 6, 16, 19, 55, 19, 56]
 		let ext = ExtrinsicBuilder::new_indexed_call(vec![0x13, 0x37, 0x13, 0x38]).build();

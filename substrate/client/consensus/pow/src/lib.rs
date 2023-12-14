@@ -336,7 +336,7 @@ where
 		let mut aux = PowAux::read::<_, B>(self.client.as_ref(), &parent_hash)?;
 
 		if let Some(inner_body) = block.body.take() {
-			let check_block = B::new(block.header.clone(), inner_body);
+			let check_block = B::new(block.header.clone(), inner_body, block.arithmic_data.clone());
 
 			if !block.state_action.skip_execution_checks() {
 				self.check_inherents(

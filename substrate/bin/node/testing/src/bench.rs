@@ -456,7 +456,7 @@ impl BenchDb {
 	pub fn generate_block(&mut self, content: BlockContent) -> Block {
 		let client = self.client();
 
-		let mut block = client.new_block(Default::default()).expect("Block creation failed");
+		let mut block = client.new_block(Default::default(), Default::default()).expect("Block creation failed");
 
 		for extrinsic in self.generate_inherents(&client) {
 			block.push(extrinsic).expect("Push inherent failed");
@@ -635,6 +635,7 @@ impl BenchContext {
 		let mut import_params =
 			BlockImportParams::new(BlockOrigin::NetworkBroadcast, block.header.clone());
 		import_params.body = Some(block.extrinsics().to_vec());
+		import_params.arithmic_data = block.arithmic_data.clone();
 		import_params.fork_choice = Some(ForkChoiceStrategy::LongestChain);
 
 		assert_eq!(self.client.chain_info().best_number, 0);

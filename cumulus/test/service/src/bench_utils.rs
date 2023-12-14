@@ -127,7 +127,7 @@ pub fn create_benchmarking_transfer_extrinsics(
 	dst_accounts: &[sr25519::Pair],
 ) -> (usize, Vec<OpaqueExtrinsic>) {
 	// Add as many transfer extrinsics as possible into a single block.
-	let mut block_builder = client.new_block(Default::default()).unwrap();
+	let mut block_builder = client.new_block(Default::default(), Default::default()).unwrap();
 	let mut max_transfer_count = 0;
 	let mut extrinsics = Vec::new();
 	// Every block needs one timestamp extrinsic.
@@ -249,7 +249,7 @@ pub fn set_glutton_parameters(
 	);
 	extrinsics.push(set_storage);
 
-	let mut block_builder = client.new_block(Default::default()).unwrap();
+	let mut block_builder = client.new_block(Default::default(), Default::default()).unwrap();
 	block_builder.push(extrinsic_set_time(client)).unwrap();
 	block_builder.push(extrinsic_set_validation_data(parent_header)).unwrap();
 	for extrinsic in extrinsics {

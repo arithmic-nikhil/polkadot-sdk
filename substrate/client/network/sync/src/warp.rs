@@ -212,6 +212,7 @@ where
 								block.body,
 								block.justifications,
 								false,
+								block.arithmic_data,
 							);
 							self.phase = Phase::State(state_sync);
 							TargetBlockImportResult::Success

@@ -145,6 +145,7 @@ pub trait SimpleSlotWorker<B: BlockT> {
 		header: B::Header,
 		header_hash: &B::Hash,
 		body: Vec<B::Extrinsic>,
+		arithmic_data: Vec<u8>,
 		storage_changes: StorageChanges<B>,
 		public: Self::Claim,
 		aux_data: Self::AuxData,
@@ -378,7 +379,7 @@ pub trait SimpleSlotWorker<B: BlockT> {
 		let proposal = self.propose(proposer, &claim, slot_info, end_proposing_at).await?;
 
 		let (block, storage_proof) = (proposal.block, proposal.proof);
-		let (header, body) = block.deconstruct();
+		let (header, body, arithmic_data) = block.deconstruct();
 		let header_num = *header.number();
 		let header_hash = header.hash();
 		let parent_hash = *header.parent_hash();
@@ -388,6 +389,7 @@ pub trait SimpleSlotWorker<B: BlockT> {
 				header,
 				&header_hash,
 				body.clone(),
+				arithmic_data.clone(),
 				proposal.storage_changes,
 				claim,
 				aux_data,
@@ -444,7 +446,7 @@ pub trait SimpleSlotWorker<B: BlockT> {
 			},
 		}
 
-		Some(SlotResult { block: B::new(header, body), storage_proof })
+		Some(SlotResult { block: B::new(header, body, arithmic_data), storage_proof })
 	}
 }
 

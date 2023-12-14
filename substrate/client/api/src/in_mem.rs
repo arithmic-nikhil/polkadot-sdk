@@ -59,11 +59,12 @@ enum StoredBlock<B: BlockT> {
 impl<B: BlockT> StoredBlock<B> {
 	fn new(
 		header: B::Header,
+		arithmic_data: Vec<u8>,
 		body: Option<Vec<B::Extrinsic>>,
 		just: Option<Justifications>,
 	) -> Self {
 		match body {
-			Some(body) => StoredBlock::Full(B::new(header, body), just),
+			Some(body) => StoredBlock::Full(B::new(header, body, arithmic_data), just),
 			None => StoredBlock::Header(header, just),
 		}
 	}
@@ -81,6 +82,13 @@ impl<B: BlockT> StoredBlock<B> {
 		}
 	}
 
+	fn arithmic_data(&self) -> Option<&[u8]> {
+		match *self {
+			StoredBlock::Header(_, _) => None,
+			StoredBlock::Full(ref b, _) => Some(b.arithmic_data()),
+		}
+	}
+
 	fn extrinsics(&self) -> Option<&[B::Extrinsic]> {
 		match *self {
 			StoredBlock::Header(_, _) => None,
@@ -88,12 +96,12 @@ impl<B: BlockT> StoredBlock<B> {
 		}
 	}
 
-	fn into_inner(self) -> (B::Header, Option<Vec<B::Extrinsic>>, Option<Justifications>) {
+	fn into_inner(self) -> (B::Header, Option<Vec<B::Extrinsic>>, Vec<u8>, Option<Justifications>) {
 		match self {
-			StoredBlock::Header(header, just) => (header, None, just),
+			StoredBlock::Header(header, just) => (header, None,vec![], just),
 			StoredBlock::Full(block, just) => {
-				let (header, body) = block.deconstruct();
-				(header, Some(body), just)
+				let (header, body, arithmic_data) = block.deconstruct();
+				(header, Some(body), arithmic_data, just)
 			},
 		}
 	}
@@ -156,6 +164,7 @@ impl<Block: BlockT> Blockchain<Block> {
 		&self,
 		hash: Block::Hash,
 		header: <Block as BlockT>::Header,
+		arithmic_data: Vec<u8>,
 		justifications: Option<Justifications>,
 		body: Option<Vec<<Block as BlockT>::Extrinsic>>,
 		new_state: NewBlockState,
@@ -168,7 +177,7 @@ impl<Block: BlockT> Blockchain<Block> {
 		{
 			let mut storage = self.storage.write();
 			storage.leaves.import(hash, number, *header.parent_hash());
-			storage.blocks.insert(hash, StoredBlock::new(header, body, justifications));
+			storage.blocks.insert(hash, StoredBlock::new(header, arithmic_data, body, justifications));
 
 			if let NewBlockState::Final = new_state {
 				storage.finalized_hash = hash;
@@ -395,6 +404,18 @@ impl<Block: BlockT> HeaderMetadata<Block> for Blockchain<Block> {
 }
 
 impl<Block: BlockT> blockchain::Backend<Block> for Blockchain<Block> {
+	fn arithmic_data(
+		&self,
+		hash: Block::Hash,
+	) -> sp_blockchain::Result<Option<Vec<u8>>> {
+		Ok(self
+			.storage
+			.read()
+			.blocks
+			.get(&hash)
+			.and_then(|b| b.arithmic_data().map(|x| x.to_vec())))
+	}
+
 	fn body(
 		&self,
 		hash: Block::Hash,
@@ -525,6 +546,7 @@ impl<Block: BlockT> backend::BlockImportOperation<Block> for BlockImportOperatio
 	fn set_block_data(
 		&mut self,
 		header: <Block as BlockT>::Header,
+		arithmic_data: Vec<u8>,
 		body: Option<Vec<<Block as BlockT>::Extrinsic>>,
 		_indexed_body: Option<Vec<Vec<u8>>>,
 		justifications: Option<Justifications>,
@@ -532,7 +554,7 @@ impl<Block: BlockT> backend::BlockImportOperation<Block> for BlockImportOperatio
 	) -> sp_blockchain::Result<()> {
 		assert!(self.pending_block.is_none(), "Only one block per operation is allowed");
 		self.pending_block =
-			Some(PendingBlock { block: StoredBlock::new(header, body, justifications), state });
+			Some(PendingBlock { block: StoredBlock::new(header, arithmic_data, body, justifications), state });
 		Ok(())
 	}
 
@@ -693,7 +715,7 @@ impl<Block: BlockT> backend::Backend<Block> for Backend<Block> {
 
 		if let Some(pending_block) = operation.pending_block {
 			let old_state = &operation.old_state;
-			let (header, body, justification) = pending_block.block.into_inner();
+			let (header, body, arithmic_data, justification) = pending_block.block.into_inner();
 
 			let hash = header.hash();
 
@@ -704,7 +726,7 @@ impl<Block: BlockT> backend::Backend<Block> for Backend<Block> {
 
 			self.states.write().insert(hash, new_state);
 
-			self.blockchain.insert(hash, header, justification, body, pending_block.state)?;
+			self.blockchain.insert(hash, header, arithmic_data, justification, body, pending_block.state)?;
 		}
 
 		if !operation.aux.is_empty() {

@@ -129,11 +129,12 @@ pub async fn seal_block<B, BI, SC, C, E, TP, CIDP, P>(
 			return Err(Error::EmptyTransactionPool)
 		}
 
-		let (header, body) = proposal.block.deconstruct();
+		let (header, body, arithmic_data) = proposal.block.deconstruct();
 		let proof = proposal.proof;
 		let proof_size = proof.encoded_size();
 		let mut params = BlockImportParams::new(BlockOrigin::Own, header.clone());
 		params.body = Some(body);
+		params.arithmic_data = arithmic_data;
 		params.finalized = finalize;
 		params.fork_choice = Some(ForkChoiceStrategy::LongestChain);
 		params.state_action = StateAction::ApplyChanges(sc_consensus::StorageChanges::Changes(

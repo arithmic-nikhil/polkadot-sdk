@@ -178,13 +178,14 @@ where
 		};
 
 		let seal = DigestItem::Seal(POW_ENGINE_ID, seal);
-		let (header, body) = build.proposal.block.deconstruct();
+		let (header, body, arithmic_data) = build.proposal.block.deconstruct();
 
 		let mut import_block = BlockImportParams::new(BlockOrigin::Own, header);
 		import_block.post_digests.push(seal);
 		import_block.body = Some(body);
 		import_block.state_action =
 			StateAction::ApplyChanges(StorageChanges::Changes(build.proposal.storage_changes));
+		import_block.arithmic_data = arithmic_data;
 
 		let intermediate = PowIntermediate::<Algorithm::Difficulty> {
 			difficulty: Some(build.metadata.difficulty),

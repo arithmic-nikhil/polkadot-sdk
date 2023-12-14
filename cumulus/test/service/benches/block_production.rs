@@ -50,7 +50,7 @@ fn benchmark_block_production(c: &mut Criterion) {
 	let parent_header = client.header(parent_hash).expect("Just fetched this hash.").unwrap();
 	let set_validation_data_extrinsic = utils::extrinsic_set_validation_data(parent_header);
 
-	let mut block_builder = client.new_block(Default::default()).unwrap();
+	let mut block_builder = client.new_block(Default::default(), Default::default()).unwrap();
 	block_builder.push(utils::extrinsic_set_time(&client)).unwrap();
 	block_builder.push(set_validation_data_extrinsic).unwrap();
 	let built_block = block_builder.build().unwrap();

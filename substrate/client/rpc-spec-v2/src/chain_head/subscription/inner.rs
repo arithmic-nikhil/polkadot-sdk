@@ -1004,7 +1004,7 @@ mod tests {
 	fn subscription_check_block() {
 		let (backend, mut client) = init_backend();
 
-		let block = client.new_block(Default::default()).unwrap().build().unwrap().block;
+		let block = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 		let hash = block.header.hash();
 		futures::executor::block_on(client.import(BlockOrigin::Own, block.clone())).unwrap();
 

@@ -464,7 +464,7 @@ where
 
 		while let Some(block) = blocks.pop_front() {
 			let block_hash = block.hash();
-			let (header, body) = block.deconstruct();
+			let (header, body, arithmic_data) = block.deconstruct();
 
 			incoming_blocks.push(IncomingBlock {
 				hash: block_hash,
@@ -477,6 +477,7 @@ where
 				skip_execution: false,
 				state: None,
 				indexed_body: None,
+				arithmic_data: Some(arithmic_data),
 			});
 
 			if let Some(waiting) = self.waiting_for_parent.remove(&block_hash) {

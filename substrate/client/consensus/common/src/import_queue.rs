@@ -89,6 +89,8 @@ pub struct IncomingBlock<B: BlockT> {
 	pub import_existing: bool,
 	/// Do not compute new state, but rather set it to the given set.
 	pub state: Option<ImportedState<B>>,
+	/// Additional block data - Encoded Arithmic transactions
+	pub arithmic_data: Option<Vec<u8>>
 }
 
 /// Verify a justification of a block

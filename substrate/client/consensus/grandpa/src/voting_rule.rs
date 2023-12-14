@@ -371,7 +371,7 @@ mod tests {
 		let mut hashes = Vec::with_capacity(200);
 
 		for _ in 0..200 {
-			let block = client.new_block(Default::default()).unwrap().build().unwrap().block;
+			let block = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 			hashes.push(block.hash());
 
 			futures::executor::block_on(client.import(BlockOrigin::Own, block)).unwrap();

@@ -819,6 +819,7 @@ where
 		header: B::Header,
 		header_hash: &B::Hash,
 		body: Vec<B::Extrinsic>,
+		arithmic_data: Vec<u8>,
 		storage_changes: StorageChanges<B>,
 		(_, public): Self::Claim,
 		epoch_descriptor: Self::AuxData,
@@ -835,10 +836,11 @@ where
 			})?;
 
 		let digest_item = <DigestItem as CompatibleDigestItem>::babe_seal(signature.into());
-
 		let mut import_block = BlockImportParams::new(BlockOrigin::Own, header);
 		import_block.post_digests.push(digest_item);
 		import_block.body = Some(body);
+
+		import_block.arithmic_data = arithmic_data;
 		import_block.state_action =
 			StateAction::ApplyChanges(sc_consensus::StorageChanges::Changes(storage_changes));
 		import_block
@@ -1234,7 +1236,7 @@ where
 				}
 
 				if let Some(inner_body) = block.body {
-					let new_block = Block::new(pre_header.clone(), inner_body);
+					let new_block = Block::new(pre_header.clone(), inner_body, block.arithmic_data.clone());
 					if !block.state_action.skip_execution_checks() {
 						// if the body is passed through and the block was executed,
 						// we need to use the runtime to check that the internally-set
@@ -1254,7 +1256,7 @@ where
 						.await?;
 					}
 
-					let (_, inner_body) = new_block.deconstruct();
+					let (_, inner_body,_ ) = new_block.deconstruct();
 					block.body = Some(inner_body);
 				}
 
@@ -1669,6 +1671,8 @@ where
 			epoch_changes.release_mutex()
 		};
 
+		let arithmic_data = block.arithmic_data.clone();
+		let block_number = block.header.number().clone();
 		let import_result = self.inner.import_block(block).await;
 
 		// revert to the original epoch changes in case there's an error
@@ -1677,6 +1681,14 @@ where
 			if let Some(old_epoch_changes) = old_epoch_changes {
 				*epoch_changes.upgrade() = old_epoch_changes;
 			}
+		} else {
+			log!(
+					target: LOG_TARGET,
+					log::Level::Info,
+					"Imported block {} succesfully {:?}",
+					block_number,
+					arithmic_data,
+				);
 		}
 
 		import_result.map_err(Into::into)

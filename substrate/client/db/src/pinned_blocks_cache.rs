@@ -32,11 +32,14 @@ struct PinnedBlockCacheEntry<Block: BlockT> {
 
 	/// Cached body for this block
 	pub body: Option<Option<Vec<Block::Extrinsic>>>,
+
+	/// Cached arithmic data for this block
+	pub arithmic_data: Option<Option<Vec<u8>>>,
 }
 
 impl<Block: BlockT> Default for PinnedBlockCacheEntry<Block> {
 	fn default() -> Self {
-		Self { ref_count: 0, justifications: None, body: None }
+		Self { ref_count: 0, justifications: None, body: None, arithmic_data: None }
 	}
 }
 
@@ -228,5 +231,10 @@ impl<Block: BlockT> PinnedBlocksCache<Block> {
 	/// Get body for cached block
 	pub fn body(&self, hash: &Block::Hash) -> Option<&Option<Vec<Block::Extrinsic>>> {
 		self.cache.peek(hash).and_then(|entry| entry.body.as_ref())
+	}
+
+	/// Get arithmic data for cached block
+	pub fn arithmic_data(&self, hash: &Block::Hash) -> Option<&Option<Vec<u8>>> {
+		self.cache.peek(hash).and_then(|entry| entry.arithmic_data.as_ref())
 	}
 }

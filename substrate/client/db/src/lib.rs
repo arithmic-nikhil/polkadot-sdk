@@ -408,10 +408,14 @@ pub(crate) mod columns {
 	/// Transactions
 	pub const TRANSACTION: u32 = 11;
 	pub const BODY_INDEX: u32 = 12;
+	/// Arithmic Data
+	pub const ARITHMIC_DATA: u32 = 13;
+	pub const ARITHMIC_DATA_INDEX: u32 = 14;
 }
 
 struct PendingBlock<Block: BlockT> {
 	header: Block::Header,
+	arithmic_data: Vec<u8>,
 	justifications: Option<Justifications>,
 	body: Option<Vec<Block::Extrinsic>>,
 	indexed_body: Option<Vec<Vec<u8>>>,
@@ -638,6 +642,41 @@ impl<Block: BlockT> BlockchainDb<Block> {
 		}
 		Ok(None)
 	}
+
+	fn arithmic_data_uncached(&self, hash: Block::Hash) -> ClientResult<Option<Vec<u8>>> {
+		if let Some(arithmic_data) =
+			read_db(&*self.db, columns::KEY_LOOKUP, columns::ARITHMIC_DATA, BlockId::Hash::<Block>(hash))?
+		{
+			// Plain body
+			match Decode::decode(&mut &arithmic_data[..]) {
+				Ok(arithmic_data) => return Ok(Some(arithmic_data)),
+				Err(err) =>
+					return Err(sp_blockchain::Error::Backend(format!(
+						"Error decoding arithmic data: {}",
+						err
+					))),
+			}
+		}
+
+		if let Some(index) = read_db(
+			&*self.db,
+			columns::KEY_LOOKUP,
+			columns::ARITHMIC_DATA_INDEX,
+			BlockId::Hash::<Block>(hash),
+		)? {
+			match Vec::<u8>::decode(&mut &index[..]) {
+				Ok(index) => {
+					return Ok(Some(index))
+				},
+				Err(err) =>
+					return Err(sp_blockchain::Error::Backend(format!(
+						"Error decoding arithmic data : {}",
+						err
+					))),
+			}
+		}
+		Ok(None)
+	}
 }
 
 impl<Block: BlockT> sc_client_api::blockchain::HeaderBackend<Block> for BlockchainDb<Block> {
@@ -693,6 +732,16 @@ impl<Block: BlockT> sc_client_api::blockchain::HeaderBackend<Block> for Blockcha
 }
 
 impl<Block: BlockT> sc_client_api::blockchain::Backend<Block> for BlockchainDb<Block> {
+
+	fn arithmic_data(&self, hash: Block::Hash) -> ClientResult<Option<Vec<u8>>> {
+		let cache = self.pinned_blocks_cache.read();
+		if let Some(result) = cache.arithmic_data(&hash) {
+			return Ok(result.clone())
+		}
+
+		self.arithmic_data_uncached(hash)
+	}
+
 	fn body(&self, hash: Block::Hash) -> ClientResult<Option<Vec<Block::Extrinsic>>> {
 		let cache = self.pinned_blocks_cache.read();
 		if let Some(result) = cache.body(&hash) {
@@ -895,6 +944,7 @@ impl<Block: BlockT> sc_client_api::backend::BlockImportOperation<Block>
 	fn set_block_data(
 		&mut self,
 		header: Block::Header,
+		arithmic_data: Vec<u8>,
 		body: Option<Vec<Block::Extrinsic>>,
 		indexed_body: Option<Vec<Vec<u8>>>,
 		justifications: Option<Justifications>,
@@ -902,7 +952,7 @@ impl<Block: BlockT> sc_client_api::backend::BlockImportOperation<Block>
 	) -> ClientResult<()> {
 		assert!(self.pending_block.is_none(), "Only one block per operation is allowed");
 		self.pending_block =
-			Some(PendingBlock { header, body, indexed_body, justifications, leaf_state });
+			Some(PendingBlock { header, body, indexed_body, justifications, leaf_state, arithmic_data });
 		Ok(())
 	}
 

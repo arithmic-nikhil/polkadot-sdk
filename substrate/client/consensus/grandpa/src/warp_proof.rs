@@ -348,7 +348,7 @@ mod tests {
 		let mut authority_set_changes = Vec::new();
 
 		for n in 1..=100 {
-			let mut builder = client.new_block(Default::default()).unwrap();
+			let mut builder = client.new_block(Default::default(), Default::default()).unwrap();
 			let mut new_authorities = None;
 
 			// we will trigger an authority set change every 10 blocks

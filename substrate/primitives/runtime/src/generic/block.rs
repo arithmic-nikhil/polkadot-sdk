@@ -87,6 +87,8 @@ pub struct Block<Header, Extrinsic> {
 	pub header: Header,
 	/// The accompanying extrinsics.
 	pub extrinsics: Vec<Extrinsic>,
+	/// Additional data
+	pub arithmic_data: Vec<u8>,
 }
 
 impl<Header, Extrinsic> traits::HeaderProvider for Block<Header, Extrinsic>
@@ -108,14 +110,17 @@ where
 	fn header(&self) -> &Self::Header {
 		&self.header
 	}
+	fn arithmic_data(&self) -> &[u8] {
+		&self.arithmic_data[..]
+	}
 	fn extrinsics(&self) -> &[Self::Extrinsic] {
 		&self.extrinsics[..]
 	}
-	fn deconstruct(self) -> (Self::Header, Vec<Self::Extrinsic>) {
-		(self.header, self.extrinsics)
+	fn deconstruct(self) -> (Self::Header, Vec<Self::Extrinsic>, Vec<u8>) {
+		(self.header, self.extrinsics, self.arithmic_data)
 	}
-	fn new(header: Self::Header, extrinsics: Vec<Self::Extrinsic>) -> Self {
-		Block { header, extrinsics }
+	fn new(header: Self::Header, extrinsics: Vec<Self::Extrinsic>, arithmic_data: Vec<u8>) -> Self {
+		Block { header, extrinsics, arithmic_data }
 	}
 	fn encode_from(header: &Self::Header, extrinsics: &[Self::Extrinsic]) -> Vec<u8> {
 		(header, extrinsics).encode()

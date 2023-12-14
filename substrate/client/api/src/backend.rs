@@ -166,6 +166,7 @@ pub trait BlockImportOperation<Block: BlockT> {
 	fn set_block_data(
 		&mut self,
 		header: Block::Header,
+		arithmic_data: Vec<u8>,
 		body: Option<Vec<Block::Extrinsic>>,
 		indexed_body: Option<Vec<Vec<u8>>>,
 		justifications: Option<Justifications>,

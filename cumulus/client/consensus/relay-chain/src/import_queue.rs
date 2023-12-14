@@ -75,7 +75,7 @@ where
 				.await
 				.map_err(|e| format!("{:?}", e))?;
 
-			let block = Block::new(block_params.header.clone(), inner_body);
+			let block = Block::new(block_params.header.clone(), inner_body, block_params.arithmic_data.clone());
 
 			let inherent_res = self
 				.client
@@ -95,8 +95,9 @@ where
 				}
 			}
 
-			let (_, inner_body) = block.deconstruct();
+			let (_, inner_body, arithmic_data) = block.deconstruct();
 			block_params.body = Some(inner_body);
+			block_params.arithmic_data = arithmic_data;
 		}
 
 		block_params.post_hash = Some(block_params.header.hash());

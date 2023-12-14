@@ -1913,7 +1913,7 @@ async fn imports_justification_for_regular_blocks_on_import() {
 
 	// create a new block (without importing it)
 	let generate_block = |parent| {
-		let builder = full_client.new_block_at(parent, Default::default(), false).unwrap();
+		let builder = full_client.new_block_at(parent, Default::default(), false, Default::default()).unwrap();
 		builder.build().unwrap().block
 	};
 

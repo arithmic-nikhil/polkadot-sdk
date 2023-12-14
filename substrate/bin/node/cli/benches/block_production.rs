@@ -126,7 +126,7 @@ fn prepare_benchmark(client: &FullClient) -> (usize, Vec<OpaqueExtrinsic>) {
 
 	let mut max_transfer_count = 0;
 	let mut extrinsics = Vec::new();
-	let mut block_builder = client.new_block(Default::default()).unwrap();
+	let mut block_builder = client.new_block(Default::default(), Default::default()).unwrap();
 
 	// Every block needs one timestamp extrinsic.
 	let extrinsic_set_time = extrinsic_set_time(1 + MINIMUM_PERIOD_FOR_BLOCKS);
@@ -173,7 +173,7 @@ fn block_production(c: &mut Criterion) {
 
 	// Buliding the very first block is around ~30x slower than any subsequent one,
 	// so let's make sure it's built and imported before we benchmark anything.
-	let mut block_builder = client.new_block(Default::default()).unwrap();
+	let mut block_builder = client.new_block(Default::default(), Default::default()).unwrap();
 	block_builder.push(extrinsic_set_time(1)).unwrap();
 	import_block(client, block_builder.build().unwrap());
 
@@ -192,7 +192,7 @@ fn block_production(c: &mut Criterion) {
 			|| extrinsics.clone(),
 			|extrinsics| {
 				let mut block_builder =
-					client.new_block_at(best_hash, Default::default(), RecordProof::No).unwrap();
+					client.new_block_at(best_hash, Default::default(), RecordProof::No, Default::default()).unwrap();
 				for extrinsic in extrinsics {
 					block_builder.push(extrinsic).unwrap();
 				}
@@ -207,7 +207,7 @@ fn block_production(c: &mut Criterion) {
 			|| extrinsics.clone(),
 			|extrinsics| {
 				let mut block_builder =
-					client.new_block_at(best_hash, Default::default(), RecordProof::Yes).unwrap();
+					client.new_block_at(best_hash, Default::default(), RecordProof::Yes, Default::default()).unwrap();
 				for extrinsic in extrinsics {
 					block_builder.push(extrinsic).unwrap();
 				}

@@ -141,7 +141,7 @@ where
 	I: ExecuteBlock<Block>,
 {
 	fn execute_block(block: Block) {
-		let (mut header, extrinsics) = block.deconstruct();
+		let (mut header, extrinsics, arithmic_data) = block.deconstruct();
 		// We need to fetch the authorities before we execute the block, to get the authorities
 		// before any potential update.
 		let authorities = Authorities::<T>::get();
@@ -179,6 +179,6 @@ where
 			panic!("Invalid AuRa seal");
 		}
 
-		I::execute_block(Block::new(header, extrinsics));
+		I::execute_block(Block::new(header, extrinsics, arithmic_data));
 	}
 }

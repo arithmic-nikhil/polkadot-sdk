@@ -27,7 +27,7 @@ async fn block_stats_work() {
 	let mut client = Arc::new(substrate_test_runtime_client::new());
 	let api = <Dev<Block, _>>::new(client.clone(), DenyUnsafe::No).into_rpc();
 
-	let block = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 
 	let (expected_witness_len, expected_witness_compact_len, expected_block_len) = {
 		let genesis_hash = client.chain_info().genesis_hash;
@@ -72,7 +72,7 @@ async fn deny_unsafe_works() {
 	let mut client = Arc::new(substrate_test_runtime_client::new());
 	let api = <Dev<Block, _>>::new(client.clone(), DenyUnsafe::Yes).into_rpc();
 
-	let block = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	client.import(BlockOrigin::Own, block).await.unwrap();
 
 	let best_hash = client.info().best_hash;

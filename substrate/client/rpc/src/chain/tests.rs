@@ -75,7 +75,7 @@ async fn should_return_a_block() {
 	let mut client = Arc::new(substrate_test_runtime_client::new());
 	let api = new_full(client.clone(), test_executor()).into_rpc();
 
-	let block = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	let block_hash = block.hash();
 	client.import(BlockOrigin::Own, block).await.unwrap();
 
@@ -152,7 +152,7 @@ async fn should_return_block_hash() {
 		api.call("chain_getBlockHash", [ListOrValue::from(1_u64)]).await.unwrap();
 	assert_matches!(res, None);
 
-	let block = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	client.import(BlockOrigin::Own, block.clone()).await.unwrap();
 
 	let res: ListOrValue<Option<H256>> =
@@ -197,7 +197,7 @@ async fn should_return_finalized_hash() {
 	assert_eq!(res, client.genesis_hash());
 
 	// import new block
-	let block = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	let block_hash = block.hash();
 	client.import(BlockOrigin::Own, block).await.unwrap();
 
@@ -232,7 +232,7 @@ async fn test_head_subscription(method: &str) {
 	let mut sub = {
 		let api = new_full(client.clone(), test_executor()).into_rpc();
 		let sub = api.subscribe(method, EmptyParams::new()).await.unwrap();
-		let block = client.new_block(Default::default()).unwrap().build().unwrap().block;
+		let block = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 		let block_hash = block.hash();
 		client.import(BlockOrigin::Own, block).await.unwrap();
 		client.finalize_block(block_hash, None).unwrap();

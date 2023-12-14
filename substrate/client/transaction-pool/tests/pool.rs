@@ -954,7 +954,7 @@ fn import_notification_to_pool_maintain_works() {
 	let mut import_stream = block_on_stream(client.import_notification_stream());
 
 	// Build the block with the transaction included
-	let mut block_builder = client.new_block(Default::default()).unwrap();
+	let mut block_builder = client.new_block(Default::default(), Default::default()).unwrap();
 	block_builder.push(xt).unwrap();
 	let block = block_builder.build().unwrap().block;
 	block_on(client.import(BlockOrigin::Own, block)).unwrap();

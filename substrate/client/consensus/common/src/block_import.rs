@@ -182,6 +182,7 @@ pub struct BlockImportParams<Block: BlockT> {
 	/// re-executed in a runtime that checks digest equivalence -- the
 	/// post-runtime digests are pushed back on after.
 	pub header: Block::Header,
+	pub arithmic_data: Vec<u8>,
 	/// Justification(s) provided for this block from the outside.
 	pub justifications: Option<Justifications>,
 	/// Digest items that have been added after the runtime for external
@@ -224,6 +225,7 @@ impl<Block: BlockT> BlockImportParams<Block> {
 		Self {
 			origin,
 			header,
+			arithmic_data: vec![],
 			justifications: None,
 			post_digests: Vec::new(),
 			body: None,

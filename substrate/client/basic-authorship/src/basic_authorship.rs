@@ -336,7 +336,7 @@ where
 	) -> Result<Proposal<Block, PR::Proof>, sp_blockchain::Error> {
 		let propose_with_timer = time::Instant::now();
 		let mut block_builder =
-			self.client.new_block_at(self.parent_hash, inherent_digests, PR::ENABLED)?;
+			self.client.new_block_at(self.parent_hash, inherent_digests, PR::ENABLED, Default::default())?;
 
 		self.apply_inherents(&mut block_builder, inherent_data)?;
 
@@ -969,7 +969,7 @@ mod tests {
 		// 99 (header_size) + 718 (proof@initialize_block) + 246 (one Transfer extrinsic)
 		let block_limit = {
 			let builder =
-				client.new_block_at(genesis_header.hash(), Default::default(), true).unwrap();
+				client.new_block_at(genesis_header.hash(), Default::default(), true, Default::default()).unwrap();
 			builder.estimate_block_size(true) + extrinsics[0].encoded_size()
 		};
 		let block = block_on(proposer.propose(

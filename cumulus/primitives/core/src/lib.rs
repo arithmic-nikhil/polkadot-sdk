@@ -157,6 +157,8 @@ pub enum ServiceQuality {
 pub struct ParachainBlockData<B: BlockT> {
 	/// The header of the parachain block.
 	header: B::Header,
+	/// Addtional block data - Encoded Arithmic transactions
+	arithmic_data: Vec<u8>,
 	/// The extrinsics of the parachain block.
 	extrinsics: sp_std::vec::Vec<B::Extrinsic>,
 	/// The data that is required to emulate the storage accesses executed by all extrinsics.
@@ -167,15 +169,16 @@ impl<B: BlockT> ParachainBlockData<B> {
 	/// Creates a new instance of `Self`.
 	pub fn new(
 		header: <B as BlockT>::Header,
+		arithmic_data: Vec<u8>,
 		extrinsics: sp_std::vec::Vec<<B as BlockT>::Extrinsic>,
 		storage_proof: sp_trie::CompactProof,
 	) -> Self {
-		Self { header, extrinsics, storage_proof }
+		Self { header, arithmic_data, extrinsics, storage_proof }
 	}
 
 	/// Convert `self` into the stored block.
 	pub fn into_block(self) -> B {
-		B::new(self.header, self.extrinsics)
+		B::new(self.header, self.extrinsics, self.arithmic_data)
 	}
 
 	/// Convert `self` into the stored header.
@@ -186,6 +189,11 @@ impl<B: BlockT> ParachainBlockData<B> {
 	/// Returns the header.
 	pub fn header(&self) -> &B::Header {
 		&self.header
+	}
+
+	/// Returns the arithmic data.
+	pub fn arithmic_data(&self) -> &[u8] {
+		&self.arithmic_data
 	}
 
 	/// Returns the extrinsics.
@@ -199,8 +207,8 @@ impl<B: BlockT> ParachainBlockData<B> {
 	}
 
 	/// Deconstruct into the inner parts.
-	pub fn deconstruct(self) -> (B::Header, sp_std::vec::Vec<B::Extrinsic>, sp_trie::CompactProof) {
-		(self.header, self.extrinsics, self.storage_proof)
+	pub fn deconstruct(self) -> (B::Header, sp_std::vec::Vec<B::Extrinsic>, sp_std::vec::Vec<u8>, sp_trie::CompactProof) {
+		(self.header, self.extrinsics, self.arithmic_data, self.storage_proof)
 	}
 }
 

@@ -745,6 +745,7 @@ where
 										import_existing: self.import_existing,
 										skip_execution: true,
 										state: None,
+										arithmic_data: block_data.block.arithmic_data,
 									}
 								})
 								.collect();
@@ -784,6 +785,7 @@ where
 									import_existing: self.import_existing,
 									skip_execution: self.skip_execution(),
 									state: None,
+									arithmic_data: b.arithmic_data,
 								}
 							})
 							.collect()
@@ -938,6 +940,7 @@ where
 							import_existing: false,
 							skip_execution: true,
 							state: None,
+							arithmic_data: b.arithmic_data,
 						}
 					})
 					.collect()
@@ -1037,6 +1040,7 @@ where
 							None,
 							None,
 							*skip_proofs,
+							None
 						));
 						self.allowed_requests.set_all();
 					}
@@ -1178,6 +1182,7 @@ where
 				.to_string()
 		})?;
 
+
 		response
 			.blocks
 			.into_iter()
@@ -1219,6 +1224,11 @@ where
 						Some(block_data.justification)
 					} else if block_data.is_empty_justification {
 						Some(Vec::new())
+					} else {
+						None
+					},
+					arithmic_data: if !block_data.arithmic_data.is_empty() {
+						Some(block_data.arithmic_data)
 					} else {
 						None
 					},
@@ -1621,6 +1631,7 @@ where
 					import_existing: self.import_existing,
 					skip_execution: self.skip_execution(),
 					state: None,
+					arithmic_data: block_data.block.arithmic_data,
 				}
 			})
 			.collect()
@@ -2319,7 +2330,7 @@ where
 		};
 
 		match import_result {
-			state::ImportResult::Import(hash, header, state, body, justifications) => {
+			state::ImportResult::Import(hash, header, state, body, justifications, arithmic_data) => {
 				let origin = BlockOrigin::NetworkInitialSync;
 				let block = IncomingBlock {
 					hash,
@@ -2332,6 +2343,7 @@ where
 					import_existing: true,
 					skip_execution: self.skip_execution(),
 					state: Some(state),
+                    arithmic_data
 				};
 				debug!(target: LOG_TARGET, "State download is complete. Import is queued");
 				Ok(OnStateData::Import(origin, block))
@@ -2954,7 +2966,7 @@ mod test {
 		.unwrap();
 
 		let (a1_hash, a1_number) = {
-			let a1 = client.new_block(Default::default()).unwrap().build().unwrap().block;
+			let a1 = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 			(a1.hash(), *a1.header.number())
 		};
 
@@ -3025,7 +3037,7 @@ mod test {
 
 		let mut new_blocks = |n| {
 			for _ in 0..n {
-				let block = client.new_block(Default::default()).unwrap().build().unwrap().block;
+				let block = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 				block_on(client.import(BlockOrigin::Own, block.clone())).unwrap();
 			}
 
@@ -3145,7 +3157,7 @@ mod test {
 	fn build_block(client: &mut Arc<TestClient>, at: Option<Hash>, fork: bool) -> Block {
 		let at = at.unwrap_or_else(|| client.info().best_hash);
 
-		let mut block_builder = client.new_block_at(at, Default::default(), false).unwrap();
+		let mut block_builder = client.new_block_at(at, Default::default(), false, Default::default()).unwrap();
 
 		if fork {
 			block_builder.push_storage_change(vec![1, 2, 3], Some(vec![4, 5, 6])).unwrap();
@@ -3863,7 +3875,7 @@ mod test {
 
 		let mut new_blocks = |n| {
 			for _ in 0..n {
-				let block = client.new_block(Default::default()).unwrap().build().unwrap().block;
+				let block = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 				block_on(client.import(BlockOrigin::Own, block.clone())).unwrap();
 			}
 

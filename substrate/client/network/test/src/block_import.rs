@@ -34,7 +34,7 @@ use substrate_test_runtime_client::{
 
 fn prepare_good_block() -> (TestClient, Hash, u64, PeerId, IncomingBlock<Block>) {
 	let mut client = substrate_test_runtime_client::new();
-	let block = client.new_block(Default::default()).unwrap().build().unwrap().block;
+	let block = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 	block_on(client.import(BlockOrigin::File, block)).unwrap();
 
 	let (hash, number) = (client.block_hash(1).unwrap().unwrap(), 1);
@@ -57,6 +57,7 @@ fn prepare_good_block() -> (TestClient, Hash, u64, PeerId, IncomingBlock<Block>)
 			import_existing: false,
 			state: None,
 			skip_execution: false,
+			arithmic_data: vec![],
 		},
 	)
 }

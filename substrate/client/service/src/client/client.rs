@@ -409,8 +409,8 @@ where
 			} else {
 				NewBlockState::Normal
 			};
-			let (header, body) = genesis_block.deconstruct();
-			op.set_block_data(header, Some(body), None, None, block_state)?;
+			let (header, body, arithmic_data) = genesis_block.deconstruct();
+			op.set_block_data(header, arithmic_data,Some(body), None, None, block_state)?;
 			backend.commit_operation(op)?;
 		}
 
@@ -499,6 +499,7 @@ where
 		let BlockImportParams {
 			origin,
 			header,
+			arithmic_data,
 			justifications,
 			post_digests,
 			body,
@@ -539,6 +540,7 @@ where
 			import_headers,
 			justifications,
 			body,
+			arithmic_data,
 			indexed_body,
 			storage_changes,
 			finalized,
@@ -576,6 +578,7 @@ where
 		import_headers: PrePostHeader<Block::Header>,
 		justifications: Option<Justifications>,
 		body: Option<Vec<Block::Extrinsic>>,
+		arithmic_data: Vec<u8>,
 		indexed_body: Option<Vec<Vec<u8>>>,
 		storage_changes: Option<sc_consensus::StorageChanges<Block>>,
 		finalized: bool,
@@ -740,6 +743,7 @@ where
 
 		operation.op.set_block_data(
 			import_headers.post().clone(),
+			arithmic_data,
 			body,
 			indexed_body,
 			justifications,
@@ -864,7 +868,7 @@ where
 
 				runtime_api.execute_block(
 					*parent_hash,
-					Block::new(import_block.header.clone(), body.clone()),
+					Block::new(import_block.header.clone(), body.clone(), import_block.arithmic_data.clone()),
 				)?;
 
 				let state = self.backend.state_at(*parent_hash)?;
@@ -1152,6 +1156,14 @@ where
 		self.backend.blockchain().header(hash)
 	}
 
+	/// Get block arithmic data by id.
+	pub fn arithmic_data(
+		&self,
+		hash: Block::Hash,
+	) -> sp_blockchain::Result<Option<Vec<u8>>> {
+		self.backend.blockchain().arithmic_data(hash)
+	}
+
 	/// Get block body by id.
 	pub fn body(
 		&self,
@@ -1418,6 +1430,7 @@ where
 		parent: Block::Hash,
 		inherent_digests: Digest,
 		record_proof: R,
+		arithmic_data: Vec<u8>,
 	) -> sp_blockchain::Result<sc_block_builder::BlockBuilder<Block, Self, B>> {
 		sc_block_builder::BlockBuilder::new(
 			self,
@@ -1426,12 +1439,14 @@ where
 			record_proof.into(),
 			inherent_digests,
 			&self.backend,
+			arithmic_data
 		)
 	}
 
 	fn new_block(
 		&self,
 		inherent_digests: Digest,
+		arithmic_data: Vec<u8>,
 	) -> sp_blockchain::Result<sc_block_builder::BlockBuilder<Block, Self, B>> {
 		let info = self.chain_info();
 		sc_block_builder::BlockBuilder::new(
@@ -1441,6 +1456,7 @@ where
 			RecordProof::No,
 			inherent_digests,
 			&self.backend,
+			arithmic_data
 		)
 	}
 }
@@ -1980,6 +1996,13 @@ where
 	E: CallExecutor<Block>,
 	Block: BlockT,
 {
+	fn arithmic_data(
+		&self,
+		hash: Block::Hash,
+	) -> sp_blockchain::Result<Option<Vec<u8>>> {
+		self.arithmic_data(hash)
+	}
+
 	fn block_body(
 		&self,
 		hash: Block::Hash,
@@ -1988,9 +2011,9 @@ where
 	}
 
 	fn block(&self, hash: Block::Hash) -> sp_blockchain::Result<Option<SignedBlock<Block>>> {
-		Ok(match (self.header(hash)?, self.body(hash)?, self.justifications(hash)?) {
-			(Some(header), Some(extrinsics), justifications) =>
-				Some(SignedBlock { block: Block::new(header, extrinsics), justifications }),
+		Ok(match (self.header(hash)?, self.body(hash)?, self.justifications(hash)?, self.arithmic_data(hash)?) {
+			(Some(header), Some(extrinsics), justifications, Some(arithmic_data)) =>
+				Some(SignedBlock { block: Block::new(header, extrinsics, arithmic_data), justifications }),
 			_ => None,
 		})
 	}

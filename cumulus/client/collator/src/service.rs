@@ -219,7 +219,7 @@ where
 		block_hash: Block::Hash,
 		candidate: ParachainCandidate<Block>,
 	) -> Option<(Collation, ParachainBlockData<Block>)> {
-		let (header, extrinsics) = candidate.block.deconstruct();
+		let (header, extrinsics, arithmic_data) = candidate.block.deconstruct();
 
 		let compact_proof = match candidate
 			.proof
@@ -245,7 +245,7 @@ where
 			.ok()
 			.flatten()?;
 
-		let block_data = ParachainBlockData::<Block>::new(header, extrinsics, compact_proof);
+		let block_data = ParachainBlockData::<Block>::new(header, arithmic_data, extrinsics, compact_proof);
 
 		let pov = polkadot_node_primitives::maybe_compress_pov(PoV {
 			block_data: BlockData(block_data.encode()),

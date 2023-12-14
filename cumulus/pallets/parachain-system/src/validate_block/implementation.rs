@@ -98,9 +98,9 @@ where
 	let parent_header =
 		codec::decode_from_bytes::<B::Header>(parent_head.clone()).expect("Invalid parent head");
 
-	let (header, extrinsics, storage_proof) = block_data.deconstruct();
+	let (header, extrinsics, arithmic_data, storage_proof) = block_data.deconstruct();
 
-	let block = B::new(header, extrinsics);
+	let block = B::new(header, extrinsics, arithmic_data);
 	assert!(parent_header.hash() == *block.header().parent_hash(), "Invalid parent hash");
 
 	let inherent_data = extract_parachain_inherent_data(&block);

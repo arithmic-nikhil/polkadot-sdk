@@ -129,7 +129,7 @@ where
 		&self,
 		ext_builder: Option<&dyn ExtrinsicBuilder>,
 	) -> Result<(Block, Option<u64>)> {
-		let mut builder = self.client.new_block(Digest { logs: self.digest_items.clone() })?;
+		let mut builder = self.client.new_block(Digest { logs: self.digest_items.clone() }, Default::default())?;
 		// Create and insert the inherents.
 		let inherents = builder.create_inherents(self.inherent_data.clone())?;
 		for inherent in inherents {

@@ -174,8 +174,8 @@ where
 
 	/// Removes the consensus seal from the block.
 	fn unsealed(&self, block: Block) -> Block {
-		let (mut header, exts) = block.deconstruct();
+		let (mut header, exts, arithmic_data) = block.deconstruct();
 		header.digest_mut().logs.retain(|item| !matches!(item, DigestItem::Seal(_, _)));
-		Block::new(header, exts)
+		Block::new(header, exts, arithmic_data)
 	}
 }

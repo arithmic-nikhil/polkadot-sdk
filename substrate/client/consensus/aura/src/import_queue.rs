@@ -230,7 +230,7 @@ where
 				// to check that the internally-set timestamp in the inherents
 				// actually matches the slot set in the seal.
 				if let Some(inner_body) = block.body.take() {
-					let new_block = B::new(pre_header.clone(), inner_body);
+					let new_block = B::new(pre_header.clone(), inner_body, block.arithmic_data.clone());
 
 					inherent_data.aura_replace_inherent_data(slot);
 
@@ -252,7 +252,7 @@ where
 						.map_err(|e| e.to_string())?;
 					}
 
-					let (_, inner_body) = new_block.deconstruct();
+					let (_, inner_body, _) = new_block.deconstruct();
 					block.body = Some(inner_body);
 				}
 

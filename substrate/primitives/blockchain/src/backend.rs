@@ -160,6 +160,8 @@ where
 pub trait Backend<Block: BlockT>:
 	HeaderBackend<Block> + HeaderMetadata<Block, Error = Error>
 {
+	/// Get block arithmic data. Returns `None` if block is not found.
+	fn arithmic_data(&self, hash: Block::Hash) -> Result<Option<Vec<u8>>>;
 	/// Get block body. Returns `None` if block is not found.
 	fn body(&self, hash: Block::Hash) -> Result<Option<Vec<<Block as BlockT>::Extrinsic>>>;
 	/// Get block justifications. Returns `None` if no justification exists.

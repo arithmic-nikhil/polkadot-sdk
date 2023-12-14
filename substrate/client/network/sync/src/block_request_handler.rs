@@ -326,6 +326,8 @@ where
 		let get_header = attributes.contains(BlockAttributes::HEADER);
 		let get_body = attributes.contains(BlockAttributes::BODY);
 		let get_indexed_body = attributes.contains(BlockAttributes::INDEXED_BODY);
+		let get_arithmic_data = attributes.contains(BlockAttributes::ARITHMIC_DATA);
+		let get_indexed_arithmic_data = attributes.contains(BlockAttributes::INDEXED_ARITHMIC_DATA);
 		let get_justification = attributes.contains(BlockAttributes::JUSTIFICATION);
 
 		let mut blocks = Vec::new();
@@ -386,6 +388,19 @@ where
 				Vec::new()
 			};
 
+			let arithmic_data = if get_arithmic_data {
+				match self.client.arithmic_data(hash)? {
+					Some(mut extrinsics) =>
+						extrinsics,
+					None => {
+						log::trace!(target: LOG_TARGET, "Missing arithmic data for block request.");
+						break
+					},
+				}
+			} else {
+				Vec::new()
+			};
+
 			let indexed_body = if get_indexed_body {
 				match self.client.block_indexed_body(hash)? {
 					Some(transactions) => transactions,
@@ -414,6 +429,7 @@ where
 				is_empty_justification,
 				justifications,
 				indexed_body,
+				arithmic_data,
 			};
 
 			let new_total_size = total_size +

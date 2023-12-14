@@ -323,7 +323,7 @@ mod tests {
 
 		let mut blocks = Vec::new();
 		for _ in 0..number_of_blocks {
-			let block = client.new_block(Default::default()).unwrap().build().unwrap().block;
+			let block = client.new_block(Default::default(), Default::default()).unwrap().build().unwrap().block;
 			block_on(client.import(BlockOrigin::Own, block.clone())).unwrap();
 			blocks.push(block);
 		}

@@ -189,10 +189,11 @@ where
 			.map_err(|e| tracing::error!(target: LOG_TARGET, error = ?e, "Proposing failed."))
 			.ok()?;
 
-		let (header, extrinsics) = block.clone().deconstruct();
+		let (header, extrinsics, arithmic_data) = block.clone().deconstruct();
 
 		let mut block_import_params = BlockImportParams::new(BlockOrigin::Own, header);
 		block_import_params.body = Some(extrinsics);
+		block_import_params.arithmic_data = arithmic_data;
 		block_import_params.state_action = sc_consensus::StateAction::ApplyChanges(
 			sc_consensus::StorageChanges::Changes(storage_changes),
 		);

@@ -119,17 +119,20 @@ where
 		parent: Block::Hash,
 		inherent_digests: Digest,
 		record_proof: R,
+		arithmic_data: Vec<u8>,
 	) -> sp_blockchain::Result<BlockBuilder<Block, RA, B>>;
 
 	/// Create a new block, built on the head of the chain.
 	fn new_block(
 		&self,
 		inherent_digests: Digest,
+		arithmic_data: Vec<u8>,
 	) -> sp_blockchain::Result<BlockBuilder<Block, RA, B>>;
 }
 
 /// Utility for building new (valid) blocks from a stream of extrinsics.
 pub struct BlockBuilder<'a, Block: BlockT, A: ProvideRuntimeApi<Block>, B> {
+	arithmic_data: Vec<u8>,
 	extrinsics: Vec<Block::Extrinsic>,
 	api: ApiRef<'a, A::Api>,
 	version: u32,
@@ -158,6 +161,7 @@ where
 		record_proof: RecordProof,
 		inherent_digests: Digest,
 		backend: &'a B,
+		arithmic_data: Vec<u8>,
 	) -> Result<Self, Error> {
 		let header = <<Block as BlockT>::Header as HeaderT>::new(
 			parent_number + One::one(),
@@ -184,6 +188,7 @@ where
 			.ok_or_else(|| Error::VersionInvalid("BlockBuilderApi".to_string()))?;
 
 		Ok(Self {
+			arithmic_data,
 			parent_hash,
 			extrinsics: Vec::new(),
 			api,
@@ -249,7 +254,7 @@ where
 			.map_err(sp_blockchain::Error::StorageChanges)?;
 
 		Ok(BuiltBlock {
-			block: <Block as BlockT>::new(header, self.extrinsics),
+			block: <Block as BlockT>::new(header, self.extrinsics, self.arithmic_data),
 			storage_changes,
 			proof,
 		})

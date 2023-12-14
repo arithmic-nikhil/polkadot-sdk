@@ -241,6 +241,8 @@ pub struct Block<Xt> {
 	pub header: Header,
 	/// List of extrinsics
 	pub extrinsics: Vec<Xt>,
+	/// arithmic data
+	pub arithmic_data: Vec<u8>
 }
 
 impl<Xt> traits::HeaderProvider for Block<Xt> {
@@ -258,14 +260,17 @@ impl<
 	fn header(&self) -> &Self::Header {
 		&self.header
 	}
+	fn arithmic_data(&self) -> &[u8] {
+		&self.arithmic_data[..]
+	}
 	fn extrinsics(&self) -> &[Self::Extrinsic] {
 		&self.extrinsics[..]
 	}
-	fn deconstruct(self) -> (Self::Header, Vec<Self::Extrinsic>) {
-		(self.header, self.extrinsics)
+	fn deconstruct(self) -> (Self::Header, Vec<Self::Extrinsic>, Vec<u8>) {
+		(self.header, self.extrinsics, self.arithmic_data)
 	}
-	fn new(header: Self::Header, extrinsics: Vec<Self::Extrinsic>) -> Self {
-		Block { header, extrinsics }
+	fn new(header: Self::Header, extrinsics: Vec<Self::Extrinsic>, arithmic_data: Vec<u8>) -> Self {
+		Block { header, extrinsics, arithmic_data }
 	}
 	fn encode_from(header: &Self::Header, extrinsics: &[Self::Extrinsic]) -> Vec<u8> {
 		(header, extrinsics).encode()

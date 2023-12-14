@@ -1264,12 +1264,14 @@ pub trait Block:
 
 	/// Returns a reference to the header.
 	fn header(&self) -> &Self::Header;
-	/// Returns a reference to the list of extrinsics.
+	/// Returns a reference to arithmic data.
+	fn arithmic_data(&self) -> &[u8];
+	/// Split the block into header and list of extrinsics.
 	fn extrinsics(&self) -> &[Self::Extrinsic];
 	/// Split the block into header and list of extrinsics.
-	fn deconstruct(self) -> (Self::Header, Vec<Self::Extrinsic>);
+	fn deconstruct(self) -> (Self::Header, Vec<Self::Extrinsic>, Vec<u8>);
 	/// Creates new block from header and extrinsics.
-	fn new(header: Self::Header, extrinsics: Vec<Self::Extrinsic>) -> Self;
+	fn new(header: Self::Header, extrinsics: Vec<Self::Extrinsic>, arithmic_data: Vec<u8>) -> Self;
 	/// Returns the hash of the block.
 	fn hash(&self) -> Self::Hash {
 		<<Self::Header as Header>::Hashing as Hash>::hash_of(self.header())

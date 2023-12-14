@@ -218,7 +218,7 @@ async fn should_notify_about_storage_changes() {
 		let sub = api_rpc.subscribe("state_subscribeStorage", EmptyParams::new()).await.unwrap();
 
 		// Cause a change:
-		let mut builder = client.new_block(Default::default()).unwrap();
+		let mut builder = client.new_block(Default::default(), Default::default()).unwrap();
 		builder
 			.push_transfer(Transfer {
 				from: AccountKeyring::Alice.into(),
@@ -263,7 +263,7 @@ async fn should_send_initial_storage_changes_and_notifications() {
 			.await
 			.unwrap();
 
-		let mut builder = client.new_block(Default::default()).unwrap();
+		let mut builder = client.new_block(Default::default(), Default::default()).unwrap();
 		builder
 			.push_transfer(Transfer {
 				from: AccountKeyring::Alice.into(),
@@ -291,7 +291,7 @@ async fn should_query_storage() {
 		let (api, _child) = new_full(client.clone(), test_executor(), DenyUnsafe::No);
 
 		let mut add_block = |index| {
-			let mut builder = client.new_block(Default::default()).unwrap();
+			let mut builder = client.new_block(Default::default(), Default::default()).unwrap();
 			// fake change: None -> None -> None
 			builder
 				.push(ExtrinsicBuilder::new_storage_change(vec![1], None).build())

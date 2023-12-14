@@ -54,6 +54,10 @@ bitflags! {
 		const JUSTIFICATION = 0b00010000;
 		/// Include indexed transactions for a block.
 		const INDEXED_BODY = 0b00100000;
+		/// Include block arithmic_data.
+		const ARITHMIC_DATA = 0b01000000;
+		/// Include indexed arithmic data for a block.
+		const INDEXED_ARITHMIC_DATA = 0b10000000;
 	}
 }
 
@@ -149,6 +153,8 @@ pub mod generic {
 		pub justification: Option<EncodedJustification>,
 		/// Justifications if requested.
 		pub justifications: Option<Justifications>,
+		/// Additional block data - Encoded Arithmic data
+		pub arithmic_data: Option<Vec<u8>>,
 	}
 
 	/// Request block data from a peer.

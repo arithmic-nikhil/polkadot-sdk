@@ -46,12 +46,13 @@ pub struct StateSync<B: BlockT, Client> {
 	client: Arc<Client>,
 	imported_bytes: u64,
 	skip_proof: bool,
+	target_arithmic_data: Option<Vec<u8>>,
 }
 
 /// Import state chunk result.
 pub enum ImportResult<B: BlockT> {
 	/// State is complete and ready for import.
-	Import(B::Hash, B::Header, ImportedState<B>, Option<Vec<B::Extrinsic>>, Option<Justifications>),
+	Import(B::Hash, B::Header, ImportedState<B>, Option<Vec<B::Extrinsic>>, Option<Justifications>, Option<Vec<u8>>),
 	/// Continue downloading.
 	Continue,
 	/// Bad state chunk.
@@ -70,6 +71,7 @@ where
 		target_body: Option<Vec<B::Extrinsic>>,
 		target_justifications: Option<Justifications>,
 		skip_proof: bool,
+		target_arithmic_data: Option<Vec<u8>>,
 	) -> Self {
 		Self {
 			client,
@@ -83,6 +85,7 @@ where
 			complete: false,
 			imported_bytes: 0,
 			skip_proof,
+			target_arithmic_data
 		}
 	}
 
@@ -228,6 +231,7 @@ where
 				},
 				self.target_body.clone(),
 				self.target_justifications.clone(),
+				self.target_arithmic_data.clone(),
 			)
 		} else {
 			ImportResult::Continue
